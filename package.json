@@ -1,0 +1,8 @@
+{
+  "name": "lumina-moon-tracker",
+  "version": "1.0.0",
+  "description": "Lumina - Premium Interactive Moon Phase Tracker",
+  "scripts": {
+    "dev": "npx -y serve ."
+  }
+}
