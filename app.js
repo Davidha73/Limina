@@ -286,7 +286,7 @@ function displayActiveLocationInfo() {
 
 function triggerUpdate() {
     displayActiveLocationInfo();
-    updateAstroCalculations();
+    setDateOffset(0);
     renderCalendar();
     renderUpcomingEvents();
 }
