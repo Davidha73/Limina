@@ -112,6 +112,40 @@
     targetZoom = Math.max(0.1, Math.min(100, targetZoom * Math.exp(-e.deltaY * 0.001)));
   }, { passive: false });
 
+  // ─── Input: Pinch Zoom (Mobile) ────────────────────────────────────────────
+  let initialPinchDist = 0;
+  let initialZoom = 1;
+
+  canvas.addEventListener('touchstart', (e) => {
+    if (viewMode !== 'system') return;
+    if (e.touches.length === 2) {
+      initialPinchDist = Math.hypot(
+        e.touches[0].clientX - e.touches[1].clientX,
+        e.touches[0].clientY - e.touches[1].clientY
+      );
+      initialZoom = targetZoom;
+    }
+  }, { passive: true });
+
+  canvas.addEventListener('touchmove', (e) => {
+    if (viewMode !== 'system') return;
+    if (e.touches.length === 2 && initialPinchDist > 0) {
+      e.preventDefault(); // Stop native page zooming/panning
+      const currentDist = Math.hypot(
+        e.touches[0].clientX - e.touches[1].clientX,
+        e.touches[0].clientY - e.touches[1].clientY
+      );
+      const ratio = currentDist / initialPinchDist;
+      targetZoom = Math.max(0.1, Math.min(100, initialZoom * ratio));
+    }
+  }, { passive: false });
+
+  canvas.addEventListener('touchend', (e) => {
+    if (e.touches.length < 2) {
+      initialPinchDist = 0;
+    }
+  }, { passive: true });
+
   // ─── Input: Click to focus/unfocus planet ──────────────────────────────────
   canvas.addEventListener('click', (e) => {
     const rect   = canvas.getBoundingClientRect();

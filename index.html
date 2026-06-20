@@ -2,7 +2,7 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
     <title>Lumina - Interactive Moon Phase Tracker</title>
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -565,7 +565,36 @@
 
         btnMoon.addEventListener("click", () => switchTo("moon"));
         btnOrrery.addEventListener("click", () => switchTo("orrery"));
+
+        // Disable pinch-to-zoom gesture on iOS mobile devices
+        document.addEventListener("gesturestart", (e) => {
+          e.preventDefault();
+        });
       })();
+
+      // Register service worker and handle dynamic caching updates
+      if ("serviceWorker" in navigator) {
+        window.addEventListener("load", () => {
+          navigator.serviceWorker.register("./sw.js").then((reg) => {
+            reg.addEventListener("updatefound", () => {
+              const newWorker = reg.installing;
+              newWorker.addEventListener("statechange", () => {
+                if (newWorker.state === "installed" && navigator.serviceWorker.controller) {
+                  console.log("New service worker update installed.");
+                }
+              });
+            });
+          });
+
+          let refreshing = false;
+          navigator.serviceWorker.addEventListener("controllerchange", () => {
+            if (!refreshing) {
+              refreshing = true;
+              window.location.reload();
+            }
+          });
+        });
+      }
     </script>
   </body>
 </html>
