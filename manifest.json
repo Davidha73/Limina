@@ -1,0 +1,30 @@
+{
+  "name": "Lumina - Moon Phase Tracker",
+  "short_name": "Lumina",
+  "description": "Interactive Moon Phase Tracker with solar data and lunar calendar.",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#0a0a1a",
+  "theme_color": "#7c6fe0",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "icons/icon_192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icons/icon_512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icons/icon_1024.png",
+      "sizes": "1024x1024",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ]
+}
