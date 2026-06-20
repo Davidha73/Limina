@@ -1,301 +1,571 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Lumina - Interactive Moon Phase Tracker</title>
     <!-- Google Fonts -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Outfit:wght@300;400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
     <!-- FontAwesome for Premium Icons -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
     <!-- Favicon & PWA Icons -->
-    <link rel="icon" type="image/png" href="icons/favicon.png">
-    <link rel="apple-touch-icon" href="icons/apple_touch_icon.png">
-    <link rel="manifest" href="manifest.json">
-    <meta name="theme-color" content="#7c6fe0">
+    <link rel="icon" type="image/png" href="icons/favicon.png" />
+    <link rel="apple-touch-icon" href="icons/apple_touch_icon.png" />
+    <link rel="manifest" href="manifest.json" />
+    <meta name="theme-color" content="#7c6fe0" />
     <!-- Main Style Sheet -->
-    <link rel="stylesheet" href="style.css">
-</head>
-<body>
+    <link rel="stylesheet" href="style.css" />
+    <script src="https://cdn.jsdelivr.net/npm/astronomy-engine@2.1.19/astronomy.browser.min.js"></script>
+  </head>
+  <body>
     <!-- Background Starfield Canvas -->
     <canvas id="stars-canvas"></canvas>
-    
-    <div class="app-wrapper">
-        <!-- Header -->
-        <header class="app-header">
+
+    <!-- Page Container (slides between Moon & Orrery views) -->
+    <div class="page-container">
+      <!-- ═══════════════════════════════════════ PAGE 1: Moon Tracker ═══ -->
+      <div id="page-moon" class="page page-active">
+        <div class="app-wrapper">
+          <!-- Header -->
+          <header class="app-header">
             <div class="logo">
-                <img src="icons/icon_192.png" alt="Lumina logo" class="logo-icon">
-                <h1>Lumina</h1>
+              <img
+                src="icons/icon_192.png"
+                alt="Lumina logo"
+                class="logo-icon"
+              />
+              <h1>Lumina</h1>
             </div>
-            
+
             <!-- Search & Geolocation -->
             <div class="search-container">
-                <div class="search-input-wrapper">
-                    <i class="fa-solid fa-magnifying-glass search-icon"></i>
-                    <input type="text" id="search-input" placeholder="Search location (e.g. London, Sydney)..." autocomplete="off">
-                    <button id="clear-btn" class="clear-btn hidden"><i class="fa-solid fa-xmark"></i></button>
-                    <button id="geo-btn" class="geo-btn" title="Use current location">
-                        <i class="fa-solid fa-location-crosshairs"></i>
-                    </button>
-                </div>
-                <div id="search-suggestions" class="suggestions-dropdown hidden"></div>
+              <div class="search-input-wrapper">
+                <i class="fa-solid fa-magnifying-glass search-icon"></i>
+                <input
+                  type="text"
+                  id="search-input"
+                  placeholder="Search location (e.g. London, Sydney)..."
+                  autocomplete="off"
+                />
+                <button id="clear-btn" class="clear-btn hidden">
+                  <i class="fa-solid fa-xmark"></i>
+                </button>
+                <button
+                  id="geo-btn"
+                  class="geo-btn"
+                  title="Use current location"
+                >
+                  <i class="fa-solid fa-location-crosshairs"></i>
+                </button>
+              </div>
+              <div
+                id="search-suggestions"
+                class="suggestions-dropdown hidden"
+              ></div>
             </div>
-        </header>
+          </header>
 
-        <!-- Current Location Display -->
-        <div class="location-banner">
+          <!-- Current Location Display -->
+          <div class="location-banner">
             <div class="location-info">
-                <h2 id="location-name">London, United Kingdom</h2>
-                <div class="location-meta">
-                    <span id="location-coords"><i class="fa-solid fa-compass"></i> 51.5074° N, 0.1278° W</span>
-                    <span id="timezone-info"><i class="fa-solid fa-clock"></i> GMT+1</span>
-                </div>
+              <h2 id="location-name">London, United Kingdom</h2>
+              <div class="location-meta">
+                <span id="location-coords"
+                  ><i class="fa-solid fa-compass"></i> 51.5074° N, 0.1278°
+                  W</span
+                >
+                <span id="timezone-info"
+                  ><i class="fa-solid fa-clock"></i> GMT+1</span
+                >
+              </div>
             </div>
             <div class="date-display">
-                <span id="current-date-str">Tuesday, June 2, 2026</span>
-                <span id="current-time-str">21:30</span>
+              <span id="current-date-str">Tuesday, June 2, 2026</span>
+              <span id="current-time-str">21:30</span>
             </div>
-        </div>
+          </div>
 
-        <!-- Dashboard Layout -->
-        <main class="dashboard-grid">
-            
+          <!-- Dashboard Layout -->
+          <main class="dashboard-grid">
             <!-- Left Column: Visualizer -->
             <section class="visualizer-card glass-card">
-                <div class="card-header">
-                    <h3><i class="fa-solid fa-eye"></i> Moon Visualizer</h3>
-                    <div class="view-toggles">
-                        <button id="view-space-btn" class="toggle-btn active" title="North is Up (Space View)">
-                            <i class="fa-solid fa-globe"></i> Space
-                        </button>
-                        <button id="view-sky-btn" class="toggle-btn" title="Oriented as seen in the sky from this location">
-                            <i class="fa-solid fa-mountain-sun"></i> Sky View
-                        </button>
-                    </div>
+              <div class="card-header">
+                <h3><i class="fa-solid fa-eye"></i> Moon Visualizer</h3>
+                <div class="view-toggles">
+                  <button
+                    id="view-space-btn"
+                    class="toggle-btn active"
+                    title="North is Up (Space View)"
+                  >
+                    <i class="fa-solid fa-globe"></i> Space
+                  </button>
+                  <button
+                    id="view-sky-btn"
+                    class="toggle-btn"
+                    title="Oriented as seen in the sky from this location"
+                  >
+                    <i class="fa-solid fa-mountain-sun"></i> Sky View
+                  </button>
                 </div>
+              </div>
 
-                <div class="moon-render-container">
-                    <!-- Glow Rings -->
-                    <div class="moon-glow"></div>
-                    <div class="moon-glow-outer"></div>
-                    <!-- Moon Canvas -->
-                    <canvas id="moon-canvas" width="400" height="400"></canvas>
-                </div>
+              <div class="moon-render-container">
+                <!-- Glow Rings -->
+                <div class="moon-glow"></div>
+                <div class="moon-glow-outer"></div>
+                <!-- Moon Canvas -->
+                <canvas id="moon-canvas" width="400" height="400"></canvas>
+              </div>
 
-                <div class="slider-container">
-                    <div class="slider-labels">
-                        <button id="prev-day-btn" class="slider-nav-btn"><i class="fa-solid fa-chevron-left"></i></button>
-                        <div class="slider-center-text">
-                            <span id="slider-date">June 2, 2026</span>
-                            <span id="slider-relative-day">(Today)</span>
-                        </div>
-                        <button id="next-day-btn" class="slider-nav-btn"><i class="fa-solid fa-chevron-right"></i></button>
-                    </div>
-                    <input type="range" id="time-slider" min="-15" max="15" value="0" class="time-slider">
-                    <button id="reset-slider-btn" class="reset-btn hidden">Back to Today</button>
+              <div class="slider-container">
+                <div class="slider-labels">
+                  <button id="prev-day-btn" class="slider-nav-btn">
+                    <i class="fa-solid fa-chevron-left"></i>
+                  </button>
+                  <div class="slider-center-text">
+                    <span id="slider-date">June 2, 2026</span>
+                    <span id="slider-relative-day">(Today)</span>
+                  </div>
+                  <button id="next-day-btn" class="slider-nav-btn">
+                    <i class="fa-solid fa-chevron-right"></i>
+                  </button>
                 </div>
+                <input
+                  type="range"
+                  id="time-slider"
+                  min="-15"
+                  max="15"
+                  value="0"
+                  class="time-slider"
+                />
+                <button id="reset-slider-btn" class="reset-btn hidden">
+                  Back to Today
+                </button>
+              </div>
             </section>
 
             <!-- Right Column: Astro Details -->
             <section class="details-panel">
-                <!-- Card 1: Phase Name & Illum -->
-                <div class="detail-card glass-card primary-highlight">
-                    <div class="detail-icon">
-                        <i id="phase-icon" class="fa-solid fa-moon"></i>
-                    </div>
-                    <div class="detail-info">
-                        <span class="detail-label">Current Phase</span>
-                        <h2 id="phase-name">Waxing Gibbous</h2>
-                        <div class="illumination-progress">
-                            <div class="illumination-text">
-                                <span>Illumination</span>
-                                <span id="illumination-percent">78%</span>
-                            </div>
-                            <div class="progress-bar-bg">
-                                <div id="illumination-bar" class="progress-bar-fill" style="width: 78%"></div>
-                            </div>
-                        </div>
-                    </div>
+              <!-- Card 1: Phase Name & Illum -->
+              <div class="detail-card glass-card primary-highlight">
+                <div class="detail-icon">
+                  <i id="phase-icon" class="fa-solid fa-moon"></i>
                 </div>
+                <div class="detail-info">
+                  <span class="detail-label">Current Phase</span>
+                  <h2 id="phase-name">Waxing Gibbous</h2>
+                  <div class="illumination-progress">
+                    <div class="illumination-text">
+                      <span>Illumination</span>
+                      <span id="illumination-percent">78%</span>
+                    </div>
+                    <div class="progress-bar-bg">
+                      <div
+                        id="illumination-bar"
+                        class="progress-bar-fill"
+                        style="width: 78%"
+                      ></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
 
-                <!-- Card 2: Age of the Moon -->
-                <div class="detail-card glass-card">
-                    <div class="detail-icon"><i class="fa-solid fa-calendar-day"></i></div>
-                    <div class="detail-info">
-                        <span class="detail-label">Moon Age</span>
-                        <h3 id="moon-age">10.4 days</h3>
-                        <span class="detail-subtext">of a 29.53 day cycle</span>
-                        <div class="progress-bar-bg age-bar-container">
-                            <div id="age-bar" class="progress-bar-fill gold-fill" style="width: 35.2%"></div>
-                        </div>
-                    </div>
+              <!-- Card 2: Age of the Moon -->
+              <div class="detail-card glass-card">
+                <div class="detail-icon">
+                  <i class="fa-solid fa-calendar-day"></i>
                 </div>
+                <div class="detail-info">
+                  <span class="detail-label">Moon Age</span>
+                  <h3 id="moon-age">10.4 days</h3>
+                  <span class="detail-subtext">of a 29.53 day cycle</span>
+                  <div class="progress-bar-bg age-bar-container">
+                    <div
+                      id="age-bar"
+                      class="progress-bar-fill gold-fill"
+                      style="width: 35.2%"
+                    ></div>
+                  </div>
+                </div>
+              </div>
 
-                <!-- Grid of Small Stats -->
-                <div class="stats-subgrid">
-                    <!-- Rise Time -->
-                    <div class="stat-card glass-card">
-                        <div class="stat-icon-wrapper rise"><i class="fa-solid fa-arrow-up"></i></div>
-                        <div class="stat-content">
-                            <span class="stat-label">Moonrise</span>
-                            <span id="rise-time" class="stat-val">18:42</span>
-                        </div>
-                    </div>
-                    <!-- Set Time -->
-                    <div class="stat-card glass-card">
-                        <div class="stat-icon-wrapper set"><i class="fa-solid fa-arrow-down"></i></div>
-                        <div class="stat-content">
-                            <span class="stat-label">Moonset</span>
-                            <span id="set-time" class="stat-val">05:12</span>
-                        </div>
-                    </div>
-                    <!-- Altitude -->
-                    <div class="stat-card glass-card">
-                        <div class="stat-icon-wrapper alt"><i class="fa-solid fa-arrow-up-right-from-square"></i></div>
-                        <div class="stat-content">
-                            <span class="stat-label">Altitude</span>
-                            <span id="altitude-val" class="stat-val">32.4°</span>
-                        </div>
-                    </div>
-                    <!-- Azimuth -->
-                    <div class="stat-card glass-card">
-                        <div class="stat-icon-wrapper azi"><i class="fa-solid fa-compass"></i></div>
-                        <div class="stat-content">
-                            <span class="stat-label">Azimuth</span>
-                            <span id="azimuth-val" class="stat-val">120° ESE</span>
-                        </div>
-                    </div>
-                    <!-- Distance -->
-                    <div class="stat-card glass-card double-width">
-                        <div class="stat-icon-wrapper dist"><i class="fa-solid fa-arrows-left-right"></i></div>
-                        <div class="stat-content">
-                            <span class="stat-label">Distance to Earth</span>
-                            <span id="distance-val" class="stat-val">384,400 km</span>
-                            <span id="distance-sub" class="stat-sub">Average distance</span>
-                        </div>
-                    </div>
+              <!-- Grid of Small Stats -->
+              <div class="stats-subgrid">
+                <!-- Rise Time -->
+                <div class="stat-card glass-card">
+                  <div class="stat-icon-wrapper rise">
+                    <i class="fa-solid fa-arrow-up"></i>
+                  </div>
+                  <div class="stat-content">
+                    <span class="stat-label">Moonrise</span>
+                    <span id="rise-time" class="stat-val">18:42</span>
+                  </div>
                 </div>
+                <!-- Set Time -->
+                <div class="stat-card glass-card">
+                  <div class="stat-icon-wrapper set">
+                    <i class="fa-solid fa-arrow-down"></i>
+                  </div>
+                  <div class="stat-content">
+                    <span class="stat-label">Moonset</span>
+                    <span id="set-time" class="stat-val">05:12</span>
+                  </div>
+                </div>
+                <!-- Altitude -->
+                <div class="stat-card glass-card">
+                  <div class="stat-icon-wrapper alt">
+                    <i class="fa-solid fa-arrow-up-right-from-square"></i>
+                  </div>
+                  <div class="stat-content">
+                    <span class="stat-label">Altitude</span>
+                    <span id="altitude-val" class="stat-val">32.4°</span>
+                  </div>
+                </div>
+                <!-- Azimuth -->
+                <div class="stat-card glass-card">
+                  <div class="stat-icon-wrapper azi">
+                    <i class="fa-solid fa-compass"></i>
+                  </div>
+                  <div class="stat-content">
+                    <span class="stat-label">Azimuth</span>
+                    <span id="azimuth-val" class="stat-val">120° ESE</span>
+                  </div>
+                </div>
+                <!-- Distance -->
+                <div class="stat-card glass-card double-width">
+                  <div class="stat-icon-wrapper dist">
+                    <i class="fa-solid fa-arrows-left-right"></i>
+                  </div>
+                  <div class="stat-content">
+                    <span class="stat-label">Distance to Earth</span>
+                    <span id="distance-val" class="stat-val">384,400 km</span>
+                    <span id="distance-sub" class="stat-sub"
+                      >Average distance</span
+                    >
+                  </div>
+                </div>
+              </div>
             </section>
-        </main>
+          </main>
 
-        <!-- Solar Data Divider -->
-        <div class="section-divider">
+          <!-- Solar Data Divider -->
+          <div class="section-divider">
             <span><i class="fa-solid fa-sun"></i> Solar Details</span>
-        </div>
+          </div>
 
-        <!-- Solar Dashboard Row -->
-        <section class="solar-dashboard-row">
+          <!-- Solar Dashboard Row -->
+          <section class="solar-dashboard-row">
             <!-- Daylight Progress Card -->
             <div class="detail-card glass-card solar-highlight">
-                <div class="detail-icon"><i class="fa-solid fa-cloud-sun"></i></div>
-                <div class="detail-info">
-                    <span class="detail-label">Daylight Duration</span>
-                    <h3 id="solar-progress-title">15h 22m of Daylight</h3>
-                    <span class="detail-subtext" id="solar-progress-sub">Sunset in 2h 15m</span>
-                    <div class="progress-bar-bg age-bar-container">
-                        <div id="solar-bar" class="progress-bar-fill orange-fill" style="width: 80%"></div>
-                    </div>
+              <div class="detail-icon">
+                <i class="fa-solid fa-cloud-sun"></i>
+              </div>
+              <div class="detail-info">
+                <span class="detail-label">Daylight Duration</span>
+                <h3 id="solar-progress-title">15h 22m of Daylight</h3>
+                <span class="detail-subtext" id="solar-progress-sub"
+                  >Sunset in 2h 15m</span
+                >
+                <div class="progress-bar-bg age-bar-container">
+                  <div
+                    id="solar-bar"
+                    class="progress-bar-fill orange-fill"
+                    style="width: 80%"
+                  ></div>
                 </div>
+              </div>
             </div>
 
             <!-- Solar Stats Grid -->
             <div class="solar-stats-grid">
-                <!-- Sunrise -->
-                <div class="stat-card glass-card">
-                    <div class="stat-icon-wrapper rise-sun"><i class="fa-solid fa-sun"></i></div>
-                    <div class="stat-content">
-                        <span class="stat-label">Sunrise</span>
-                        <span id="sunrise-time" class="stat-val">04:42</span>
-                    </div>
+              <!-- Sunrise -->
+              <div class="stat-card glass-card">
+                <div class="stat-icon-wrapper rise-sun">
+                  <i class="fa-solid fa-sun"></i>
                 </div>
-                <!-- Sunset -->
-                <div class="stat-card glass-card">
-                    <div class="stat-icon-wrapper set-sun"><i class="fa-solid fa-moon"></i></div>
-                    <div class="stat-content">
-                        <span class="stat-label">Sunset</span>
-                        <span id="sunset-time" class="stat-val">21:12</span>
-                    </div>
+                <div class="stat-content">
+                  <span class="stat-label">Sunrise</span>
+                  <span id="sunrise-time" class="stat-val">04:42</span>
                 </div>
-                <!-- Sun Altitude -->
-                <div class="stat-card glass-card">
-                    <div class="stat-icon-wrapper alt-sun"><i class="fa-solid fa-arrow-up-long"></i></div>
-                    <div class="stat-content">
-                        <span class="stat-label">Sun Altitude</span>
-                        <span id="sun-altitude-val" class="stat-val">12.4°</span>
-                    </div>
+              </div>
+              <!-- Sunset -->
+              <div class="stat-card glass-card">
+                <div class="stat-icon-wrapper set-sun">
+                  <i class="fa-solid fa-moon"></i>
                 </div>
-                <!-- Sun Azimuth -->
-                <div class="stat-card glass-card">
-                    <div class="stat-icon-wrapper azi-sun"><i class="fa-solid fa-compass"></i></div>
-                    <div class="stat-content">
-                        <span class="stat-label">Sun Azimuth</span>
-                        <span id="sun-azimuth-val" class="stat-val">290° WNW</span>
-                    </div>
+                <div class="stat-content">
+                  <span class="stat-label">Sunset</span>
+                  <span id="sunset-time" class="stat-val">21:12</span>
                 </div>
+              </div>
+              <!-- Sun Altitude -->
+              <div class="stat-card glass-card">
+                <div class="stat-icon-wrapper alt-sun">
+                  <i class="fa-solid fa-arrow-up-long"></i>
+                </div>
+                <div class="stat-content">
+                  <span class="stat-label">Sun Altitude</span>
+                  <span id="sun-altitude-val" class="stat-val">12.4°</span>
+                </div>
+              </div>
+              <!-- Sun Azimuth -->
+              <div class="stat-card glass-card">
+                <div class="stat-icon-wrapper azi-sun">
+                  <i class="fa-solid fa-compass"></i>
+                </div>
+                <div class="stat-content">
+                  <span class="stat-label">Sun Azimuth</span>
+                  <span id="sun-azimuth-val" class="stat-val">290° WNW</span>
+                </div>
+              </div>
             </div>
-        </section>
+          </section>
 
-        <!-- Monthly Calendar Grid Section -->
-        <section class="calendar-section glass-card">
+          <!-- Monthly Calendar Grid Section -->
+          <section class="calendar-section glass-card">
             <div class="calendar-header">
-                <div class="calendar-title">
-                    <h3><i class="fa-solid fa-calendar-days"></i> Moon Phase Calendar</h3>
-                    <p id="calendar-month-name">June 2026</p>
-                </div>
-                <div class="calendar-nav">
-                    <button id="prev-month-btn" class="nav-btn"><i class="fa-solid fa-chevron-left"></i></button>
-                    <button id="today-month-btn" class="nav-btn today-btn">Current Month</button>
-                    <button id="next-month-btn" class="nav-btn"><i class="fa-solid fa-chevron-right"></i></button>
-                </div>
+              <div class="calendar-title">
+                <h3>
+                  <i class="fa-solid fa-calendar-days"></i> Moon Phase Calendar
+                </h3>
+                <p id="calendar-month-name">June 2026</p>
+              </div>
+              <div class="calendar-nav">
+                <button id="prev-month-btn" class="nav-btn">
+                  <i class="fa-solid fa-chevron-left"></i>
+                </button>
+                <button id="today-month-btn" class="nav-btn today-btn">
+                  Current Month
+                </button>
+                <button id="next-month-btn" class="nav-btn">
+                  <i class="fa-solid fa-chevron-right"></i>
+                </button>
+              </div>
             </div>
-            
+
             <div class="calendar-grid-container">
-                <!-- Day Names -->
-                <div class="calendar-weekdays">
-                    <div>Sun</div>
-                    <div>Mon</div>
-                    <div>Tue</div>
-                    <div>Wed</div>
-                    <div>Thu</div>
-                    <div>Fri</div>
-                    <div>Sat</div>
-                </div>
-                <!-- Days Grid -->
-                <div id="calendar-days" class="calendar-days">
-                    <!-- Dynamically populated -->
-                </div>
+              <!-- Day Names -->
+              <div class="calendar-weekdays">
+                <div>Sun</div>
+                <div>Mon</div>
+                <div>Tue</div>
+                <div>Wed</div>
+                <div>Thu</div>
+                <div>Fri</div>
+                <div>Sat</div>
+              </div>
+              <!-- Days Grid -->
+              <div id="calendar-days" class="calendar-days">
+                <!-- Dynamically populated -->
+              </div>
             </div>
-        </section>
+          </section>
 
-        <!-- Upcoming Phases / Events Section -->
-        <section class="events-section glass-card">
-            <h3><i class="fa-solid fa-star-and-crescent"></i> Major Upcoming Lunar Phases</h3>
+          <!-- Upcoming Phases / Events Section -->
+          <section class="events-section glass-card">
+            <h3>
+              <i class="fa-solid fa-star-and-crescent"></i> Major Upcoming Lunar
+              Phases
+            </h3>
             <div class="events-grid" id="events-grid">
-                <!-- Dynamically populated with 4 primary phases -->
-                <div class="event-item">
-                    <div class="event-moon-mini" data-phase="new"></div>
-                    <div class="event-details">
-                        <h4>New Moon</h4>
-                        <span class="event-date">June 15, 2026</span>
-                        <span class="event-countdown">In 13 days</span>
-                    </div>
+              <!-- Dynamically populated with 4 primary phases -->
+              <div class="event-item">
+                <div class="event-moon-mini" data-phase="new"></div>
+                <div class="event-details">
+                  <h4>New Moon</h4>
+                  <span class="event-date">June 15, 2026</span>
+                  <span class="event-countdown">In 13 days</span>
                 </div>
-                <!-- Other events will load here -->
+              </div>
+              <!-- Other events will load here -->
             </div>
-        </section>
+          </section>
 
-        <!-- Footer -->
-        <footer class="app-footer-note">
-            <p>Calculations provided by SunCalc. Standard view displays celestial orientation (North up). Sky view displays local horizon projection. Times are shown in local system timezone.</p>
-        </footer>
+          <!-- Footer -->
+          <footer class="app-footer-note">
+            <p>
+              Calculations provided by SunCalc. Standard view displays celestial
+              orientation (North up). Sky view displays local horizon
+              projection. Times are shown in local system timezone.
+            </p>
+          </footer>
+        </div>
+      </div>
+      <!-- /#page-moon -->
+
+      <!-- ═══════════════════════════════════════ PAGE 2: Solar System ══ -->
+      <div id="page-orrery" class="page">
+        <div class="app-wrapper orrery-page-wrapper">
+          <header class="app-header orrery-header">
+            <div class="logo">
+              <img
+                src="icons/icon_192.png"
+                alt="Lumina logo"
+                class="logo-icon"
+              />
+              <h1>Solar System</h1>
+            </div>
+            <!-- <p class="orrery-page-subtitle">Live planetary positions · Click a planet to focus</p> -->
+          </header>
+
+          <section class="orrery-section glass-card orrery-fullpage">
+            <div class="card-header">
+              <h3>
+                <i class="fa-solid fa-globe"></i> Live Planetary Positions
+              </h3>
+              <div class="orrery-controls">
+                <button
+                  id="orrery-zoom-out"
+                  class="nav-btn"
+                  title="Zoom out"
+                  aria-label="Zoom out"
+                >
+                  <i class="fa-solid fa-magnifying-glass-minus"></i>
+                </button>
+                <button
+                  id="orrery-zoom-all"
+                  class="nav-btn orrery-zoom-all-btn"
+                  title="Zoom to fit all planets"
+                  aria-label="Zoom all"
+                >
+                  <i class="fa-solid fa-maximize"></i>
+                  <span>Zoom All</span>
+                </button>
+                <button
+                  id="orrery-zoom-in"
+                  class="nav-btn"
+                  title="Zoom in"
+                  aria-label="Zoom in"
+                >
+                  <i class="fa-solid fa-magnifying-glass-plus"></i>
+                </button>
+              </div>
+            </div>
+            <div class="orrery-canvas-wrapper">
+              <canvas id="orrery-canvas"></canvas>
+              <div id="orrery-timestamp" class="orrery-timestamp"></div>
+            </div>
+            <!-- Planet Info Panel -->
+            <div id="orrery-planet-info" class="orrery-info-panel">
+              <div class="info-header">
+                <h4 id="info-planet-name" class="info-title"></h4>
+                <span id="info-planet-type" class="info-badge"></span>
+              </div>
+              <div class="info-divider"></div>
+              <div class="info-grid">
+                <div class="info-row">
+                  <span class="info-label"
+                    ><i class="fa-solid fa-sun"></i> From Sun</span
+                  >
+                  <span id="info-dist-sun" class="info-value"></span>
+                </div>
+                <div class="info-row">
+                  <span class="info-label"
+                    ><i class="fa-solid fa-earth-americas"></i> From Earth</span
+                  >
+                  <span id="info-dist-earth" class="info-value"></span>
+                </div>
+                <div class="info-row">
+                  <span class="info-label"
+                    ><i class="fa-solid fa-clock"></i> Period</span
+                  >
+                  <span id="info-period" class="info-value"></span>
+                </div>
+                <div class="info-row">
+                  <span class="info-label"
+                    ><i class="fa-solid fa-moon"></i> Moons</span
+                  >
+                  <span id="info-moons" class="info-value"></span>
+                </div>
+              </div>
+              <div class="info-divider"></div>
+              <p id="info-tagline" class="info-tagline"></p>
+            </div>
+            <p class="orrery-hint">
+              Click a planet to focus &middot; Scroll to zoom
+            </p>
+          </section>
+
+          <!-- Footer -->
+          <footer class="app-footer-note">
+            <p>
+              Calculations provided by Astronomy Engine. Orbit scale is
+              non-linear (logarithmic mapping) to fit inner and outer planets.
+              Fact data sourced from NASA and Wikipedia. Times are shown in UTC.
+            </p>
+          </footer>
+        </div>
+      </div>
+      <!-- /#page-orrery -->
     </div>
+    <!-- /.page-container -->
+
+    <!-- Floating Navigation Dock -->
+    <nav class="nav-dock" aria-label="Page navigation">
+      <button
+        id="nav-moon"
+        class="nav-dock-btn active"
+        aria-label="Moon Tracker"
+      >
+        <span class="nav-dock-icon"><i class="fa-solid fa-moon"></i></span>
+        <span class="nav-dock-label">Moon</span>
+      </button>
+      <div class="nav-dock-divider"></div>
+      <button id="nav-orrery" class="nav-dock-btn" aria-label="Solar System">
+        <span class="nav-dock-icon"
+          ><i class="fa-solid fa-solar-system" style="display: none"></i
+          ><i class="fa-solid fa-circle-nodes"></i
+        ></span>
+        <span class="nav-dock-label">Solar System</span>
+      </button>
+    </nav>
 
     <!-- Scripts -->
     <!-- Load SunCalc ESM via standard module loader or import map. For simplicity, we import it directly in app.js -->
     <script src="moon-renderer.js"></script>
     <script src="stars.js"></script>
     <script type="module" src="app.js"></script>
-</body>
+    <script defer src="orrery.js"></script>
+    <script>
+      (function () {
+        const moonPage = document.getElementById("page-moon");
+        const orreryPage = document.getElementById("page-orrery");
+        const btnMoon = document.getElementById("nav-moon");
+        const btnOrrery = document.getElementById("nav-orrery");
+
+        function switchTo(target) {
+          if (target === "orrery") {
+            moonPage.classList.remove("page-active");
+            moonPage.classList.add("page-exit-left");
+            orreryPage.classList.remove("page-enter-right");
+            orreryPage.classList.add("page-active");
+            btnMoon.classList.remove("active");
+            btnOrrery.classList.add("active");
+            // Allow orrery canvas to measure its new size
+            setTimeout(() => {
+              window.dispatchEvent(new Event("resize"));
+            }, 50);
+          } else {
+            orreryPage.classList.remove("page-active");
+            orreryPage.classList.add("page-enter-right");
+            moonPage.classList.remove("page-exit-left");
+            moonPage.classList.add("page-active");
+            btnOrrery.classList.remove("active");
+            btnMoon.classList.add("active");
+          }
+        }
+
+        btnMoon.addEventListener("click", () => switchTo("moon"));
+        btnOrrery.addEventListener("click", () => switchTo("orrery"));
+      })();
+    </script>
+  </body>
 </html>
