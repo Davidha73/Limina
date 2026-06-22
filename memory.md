@@ -1,17 +1,15 @@
-## [2026-06-22T18:30:00+01:00]
-**Status:** Implemented an interactive device-orientation "Find in Sky" compass finder. Accesses absolute compass yaw and pitch sensors to guide users in aligning their phone with the Moon's real-time Azimuth and Altitude.
+## [2026-06-22T20:50:00+01:00]
+**Status:** Made the Sun safety warning dynamically visible in the compass finder. Coded checks inside `handleOrientation()` so that it only renders when the Sun is above the horizon ($Alt > 0^\circ$) and the user points their phone within $30^\circ$ of the Sun's real-time Azimuth.
 **Files Changed:**
 - [index.html](file:///c:/Users/david/OneDrive/Coding/Projects/Lumina/index.html)
-- [style.css](file:///c:/Users/david/OneDrive/Coding/Projects/Lumina/style.css)
 - [app.js](file:///c:/Users/david/OneDrive/Coding/Projects/Lumina/app.js)
 **Next Objectives:**
-- Verify absolute compass tracking on iOS and Android devices under HTTPS environments.
+- Test absolute sensor accuracy and verify warning behavior when pointing near/away from the Sun's azimuth.
 
-## [2026-06-22T18:25:00+01:00]
-**Status:** Implemented smooth-expanding descriptions inside all metric cards on the Moon Phase tracker. When a user clicks a card, a description of the metric (e.g. Moon Age, Azimuth, Distance) transitions open smoothly with a help info icon cue.
+## [2026-06-22T20:45:00+01:00]
+**Status:** Added the "Find in Sky" button to the Sun Azimuth card. Extended `startCompass()` and `handleOrientation()` in `app.js` to dynamically support a `targetMode` ('moon' or 'sun'), enabling targeting and guides for the Sun.
 **Files Changed:**
 - [index.html](file:///c:/Users/david/OneDrive/Coding/Projects/Lumina/index.html)
-- [style.css](file:///c:/Users/david/OneDrive/Coding/Projects/Lumina/style.css)
 - [app.js](file:///c:/Users/david/OneDrive/Coding/Projects/Lumina/app.js)
 **Next Objectives:**
-- Verify CSS transitions for max-height and opacity of explanation elements.
+- Verify that both Sun and Moon azimuth guides trigger correctly and align with their respective altitude/azimuth stats.

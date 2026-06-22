@@ -30,6 +30,9 @@ const state = {
         active: false,
         targetAz: 0,
         targetAlt: 0,
+        sunAz: 0,
+        sunAlt: 0,
+        targetMode: 'moon',
         hasVibrated: false
     }
 };
@@ -236,6 +239,10 @@ function setupEventListeners() {
     const closeCompassBtn = document.getElementById('close-compass-btn');
     const compassDial = document.getElementById('compass-dial');
     const moonTargetAnchor = document.getElementById('moon-target-anchor');
+    const sunTargetAnchor = document.getElementById('sun-target-anchor');
+    const moonIndicator = document.querySelector('.moon-target-indicator');
+    const sunIndicator = document.querySelector('.sun-target-indicator');
+    const sunWarningEl = document.querySelector('.sun-warning');
     const currentTiltEl = document.getElementById('current-tilt');
     const targetAltitudeEl = document.getElementById('target-altitude');
     const altitudeCurrentBar = document.getElementById('altitude-current-bar');
@@ -246,6 +253,10 @@ function setupEventListeners() {
 
     function handleOrientation(e) {
         if (!state.compass.active) return;
+
+        // Determine active target based on mode
+        const targetAz = state.compass.targetMode === 'sun' ? state.compass.sunAz : state.compass.targetAz;
+        const targetAlt = state.compass.targetMode === 'sun' ? state.compass.sunAlt : state.compass.targetAlt;
 
         // 1. Heading (compass direction)
         let heading = null;
@@ -269,26 +280,58 @@ function setupEventListeners() {
         // Rotate the dial by -heading so N always points North
         compassDial.style.transform = `rotate(${-heading}deg)`;
 
-        // 4. Update Target Moon Angle on the dial
+        // 4. Update Target Moon and Sun Angles on the dial
         moonTargetAnchor.style.transform = `rotate(${state.compass.targetAz}deg)`;
+        if (sunTargetAnchor) {
+            sunTargetAnchor.style.transform = `rotate(${state.compass.sunAz}deg)`;
+        }
+
+        // Toggle below-horizon styling if they are set
+        if (moonIndicator) {
+            if (state.compass.targetAlt < 0) {
+                moonIndicator.classList.add('below-horizon');
+            } else {
+                moonIndicator.classList.remove('below-horizon');
+            }
+        }
+        if (sunIndicator) {
+            if (state.compass.sunAlt < 0) {
+                sunIndicator.classList.add('below-horizon');
+            } else {
+                sunIndicator.classList.remove('below-horizon');
+            }
+        }
+
+        // Show Sun warning dynamically if pointing close to the Sun (within 30 deg) and the Sun is above the horizon
+        if (sunWarningEl) {
+            let diffToSun = state.compass.sunAz - heading;
+            while (diffToSun > 180) diffToSun -= 360;
+            while (diffToSun < -180) diffToSun += 360;
+
+            if (state.compass.sunAlt > 0 && Math.abs(diffToSun) < 30) {
+                sunWarningEl.classList.remove('hidden');
+            } else {
+                sunWarningEl.classList.add('hidden');
+            }
+        }
 
         // 5. Update Altitude Gauge
         currentTiltEl.textContent = `${Math.round(tilt)}°`;
-        targetAltitudeEl.textContent = `${Math.round(state.compass.targetAlt)}°`;
+        targetAltitudeEl.textContent = `${Math.round(targetAlt)}°`;
 
         const tiltPct = (tilt / 90) * 100;
         altitudeCurrentBar.style.width = `${tiltPct}%`;
 
-        const targetAltPct = (state.compass.targetAlt / 90) * 100;
+        const targetAltPct = (targetAlt / 90) * 100;
         altitudeTargetBand.style.left = `${Math.max(0, targetAltPct - 5)}%`;
         altitudeTargetBand.style.width = '10%';
 
         // 6. Calculate directional differences
-        let diffAz = state.compass.targetAz - heading;
+        let diffAz = targetAz - heading;
         while (diffAz > 180) diffAz -= 360;
         while (diffAz < -180) diffAz += 360;
 
-        const diffAlt = state.compass.targetAlt - tilt;
+        const diffAlt = targetAlt - tilt;
 
         // 7. Render status instructions
         if (Math.abs(diffAz) < 6) {
@@ -313,14 +356,21 @@ function setupEventListeners() {
         }
     }
 
-    function startCompass() {
+    function startCompass(mode = 'moon') {
+        state.compass.targetMode = mode;
         state.compass.active = true;
         state.compass.hasVibrated = false;
         compassOverlay.classList.remove('hidden');
         document.body.style.overflow = 'hidden'; // prevent scrolling behind
 
-        // Initialize target labels
-        targetAltitudeEl.textContent = `${Math.round(state.compass.targetAlt)}°`;
+        // Initialize target labels and headers
+        const compassTitle = compassOverlay.querySelector('h3');
+        if (compassTitle) {
+            compassTitle.textContent = mode === 'sun' ? "Locate the Sun" : "Locate the Moon";
+        }
+        
+        const targetAlt = mode === 'sun' ? state.compass.sunAlt : state.compass.targetAlt;
+        targetAltitudeEl.textContent = `${Math.round(targetAlt)}°`;
 
         if (window.DeviceOrientationEvent && typeof window.DeviceOrientationEvent.requestPermission === 'function') {
             // iOS Safari requires permission
@@ -366,7 +416,9 @@ function setupEventListeners() {
         }
     }
 
-    if (findSkyBtn) findSkyBtn.addEventListener('click', startCompass);
+    const findSkySunBtn = document.getElementById('find-sky-sun-btn');
+    if (findSkyBtn) findSkyBtn.addEventListener('click', () => startCompass('moon'));
+    if (findSkySunBtn) findSkySunBtn.addEventListener('click', () => startCompass('sun'));
     if (closeCompassBtn) closeCompassBtn.addEventListener('click', stopCompass);
     if (compassOverlay) {
         // Also close if clicking outside modal
@@ -618,6 +670,9 @@ function updateAstroCalculations() {
     
     const sunAltitude = sunHz.altitude;
     const sunAzimuth = sunHz.azimuth;
+    
+    state.compass.sunAz = sunAzimuth;
+    state.compass.sunAlt = sunAltitude;
     
     // Sun times
     const sunTimes = SunCalc.getTimes(date, lat, lon);

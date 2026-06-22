@@ -338,6 +338,9 @@
                 <div class="stat-content">
                   <span class="stat-label">Sun Azimuth</span>
                   <span id="sun-azimuth-val" class="stat-val">290° WNW</span>
+                  <button id="find-sky-sun-btn" class="find-sky-btn">
+                    <i class="fa-solid fa-location-arrow"></i> Find in Sky
+                  </button>
                   <div class="card-explanation">The compass direction of the Sun, moving clockwise from North (0°).</div>
                 </div>
               </div>
@@ -549,8 +552,13 @@
         <button id="close-compass-btn" class="close-compass-btn">
           <i class="fa-solid fa-xmark"></i>
         </button>
-        <h3>Locate the Moon</h3>
+        <h3>Locate Moon & Sun</h3>
         <p class="compass-desc">Hold your phone flat for the compass, then tilt it up to match the altitude.</p>
+        
+        <div class="sun-warning hidden">
+          <i class="fa-solid fa-triangle-exclamation"></i>
+          <span><strong>WARNING:</strong> Never look directly at the Sun. Permanent eye damage can occur.</span>
+        </div>
         
         <div class="compass-ring-container">
           <div class="compass-dial" id="compass-dial">
@@ -561,6 +569,11 @@
             <div class="moon-target-anchor" id="moon-target-anchor">
               <div class="moon-target-indicator">
                 <i class="fa-solid fa-moon"></i>
+              </div>
+            </div>
+            <div class="sun-target-anchor" id="sun-target-anchor">
+              <div class="sun-target-indicator">
+                <i class="fa-solid fa-sun"></i>
               </div>
             </div>
           </div>
