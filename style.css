@@ -76,6 +76,7 @@ body {
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
+  position: relative;
 }
 
 .glass-card {
@@ -749,7 +750,7 @@ body {
   margin-bottom: 1.25rem;
 }
 
-.calendar-title h3 {
+.calendar-header h3 {
   font-family: var(--font-heading);
   font-size: 1.2rem;
   font-weight: 500;
@@ -758,14 +759,20 @@ body {
   gap: 0.5rem;
 }
 
-.calendar-title h3 i {
+.calendar-header h3 i {
   color: var(--accent-gold);
 }
 
-.calendar-title p {
-  font-size: 0.85rem;
+.calendar-controls {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+#calendar-month-name {
+  font-size: 0.9rem;
   color: var(--text-secondary);
-  margin-top: 0.15rem;
+  font-weight: 500;
 }
 
 .calendar-nav {
@@ -983,7 +990,8 @@ body {
   ::-webkit-scrollbar {
     display: none;
   }
-  html, body {
+  html,
+  body {
     scrollbar-width: none;
   }
 }
@@ -1001,6 +1009,11 @@ body {
   .app-wrapper {
     padding: 1rem 0.75rem;
     gap: 1rem;
+  }
+
+  .settings-btn {
+    top: 1rem;
+    right: 0.75rem;
   }
 
   .app-header {
@@ -1032,6 +1045,11 @@ body {
     flex-direction: column;
     align-items: flex-start;
     gap: 0.75rem;
+  }
+
+  .calendar-controls {
+    width: 100%;
+    justify-content: space-between;
   }
 
   .visualizer-card,
@@ -1282,7 +1300,7 @@ body {
   font-size: 0.72rem;
   font-weight: 500;
   color: var(--text-secondary);
-  background: rgba(8, 10, 28, 0.60);
+  background: rgba(8, 10, 28, 0.6);
   border: 1px solid rgba(255, 255, 255, 0.06);
   padding: 0.35rem 0.75rem;
   border-radius: 100px;
@@ -1681,13 +1699,16 @@ body {
 .stat-card {
   cursor: pointer;
   position: relative;
-  transition: background-color 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease;
+  transition:
+    background-color 0.25s ease,
+    border-color 0.25s ease,
+    box-shadow 0.25s ease;
 }
 
 .detail-card::after,
 .stat-card::after {
-  content: '\f05a'; /* FontAwesome circle-info icon */
-  font-family: 'Font Awesome 6 Free';
+  content: "\f05a"; /* FontAwesome circle-info icon */
+  font-family: "Font Awesome 6 Free";
   font-weight: 900;
   position: absolute;
   top: 0.6rem;
@@ -1695,7 +1716,9 @@ body {
   font-size: 0.72rem;
   color: var(--text-muted);
   opacity: 0.35;
-  transition: opacity 0.2s ease, color 0.2s ease;
+  transition:
+    opacity 0.2s ease,
+    color 0.2s ease;
 }
 
 .detail-card:hover::after,
@@ -1706,7 +1729,7 @@ body {
 
 .detail-card.expanded::after,
 .stat-card.expanded::after {
-  content: '\f057'; /* FontAwesome circle-xmark icon when expanded */
+  content: "\f057"; /* FontAwesome circle-xmark icon when expanded */
   color: var(--text-muted);
   opacity: 0.6;
 }
@@ -1718,7 +1741,10 @@ body {
   font-size: 0.76rem;
   color: var(--text-secondary);
   line-height: 1.42;
-  transition: max-height 0.35s cubic-bezier(0.25, 0.8, 0.25, 1), opacity 0.3s ease, margin-top 0.3s ease;
+  transition:
+    max-height 0.35s cubic-bezier(0.25, 0.8, 0.25, 1),
+    opacity 0.3s ease,
+    margin-top 0.3s ease;
   margin-top: 0;
   width: 100%;
 }
@@ -1742,6 +1768,121 @@ body {
 .detail-info {
   display: flex;
   flex-direction: column;
+}
+
+/* AR Camera video stream */
+.compass-overlay video.camera-video {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  object-fit: cover;
+  z-index: 0;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.5s ease;
+}
+
+.compass-overlay.camera-active video.camera-video {
+  opacity: 1;
+}
+
+.compass-overlay.camera-active {
+  background: rgba(3, 4, 9, 0.2);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+.compass-overlay.camera-active .compass-modal {
+  background: rgba(12, 14, 38, 0.65);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-color: rgba(255, 255, 255, 0.25);
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+}
+
+.camera-toggle-btn {
+  position: absolute;
+  top: 1rem;
+  left: 1rem;
+  background: transparent;
+  border: none;
+  color: var(--text-secondary);
+  font-size: 1.1rem;
+  cursor: pointer;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: var(--transition);
+  z-index: 15;
+}
+
+.camera-toggle-btn:hover {
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--accent-cyan);
+}
+
+.camera-toggle-btn.active {
+  color: var(--accent-cyan);
+  background: rgba(0, 242, 254, 0.1);
+  border: 1px solid rgba(0, 242, 254, 0.2);
+  box-shadow: 0 0 10px rgba(0, 242, 254, 0.15);
+}
+
+/* Compass Reticle (Alignment Guide) */
+.compass-reticle {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 60px;
+  height: 60px;
+  border: 2px dashed #f6a165; /* dashed orange */
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 5;
+  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0.8;
+}
+
+.compass-reticle::before,
+.compass-reticle::after {
+  content: "";
+  position: absolute;
+  background: #f6a165;
+  transition: all 0.3s ease;
+}
+
+/* horizontal crosshair line */
+.compass-reticle::before {
+  width: 14px;
+  height: 2px;
+}
+
+/* vertical crosshair line */
+.compass-reticle::after {
+  width: 2px;
+  height: 14px;
+}
+
+/* Reticle alignment styling */
+.compass-reticle.aligned {
+  border: 2px solid #2ec4b6; /* solid green */
+  box-shadow: 0 0 15px rgba(46, 196, 182, 0.6);
+  transform: translate(-50%, -50%) scale(1.15);
+  opacity: 1;
+}
+
+.compass-reticle.aligned::before,
+.compass-reticle.aligned::after {
+  background: #2ec4b6;
 }
 
 /* Locate Moon Compass Modal Overlay */
@@ -1841,10 +1982,27 @@ body {
   color: var(--text-muted);
 }
 
-.direction.north { top: 6px; left: 50%; transform: translateX(-50%); color: #ff4444; }
-.direction.east  { right: 8px; top: 50%; transform: translateY(-50%); }
-.direction.south { bottom: 6px; left: 50%; transform: translateX(-50%); }
-.direction.west  { left: 8px; top: 50%; transform: translateY(-50%); }
+.direction.north {
+  top: 6px;
+  left: 50%;
+  transform: translateX(-50%);
+  color: #ff4444;
+}
+.direction.east {
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+}
+.direction.south {
+  bottom: 6px;
+  left: 50%;
+  transform: translateX(-50%);
+}
+.direction.west {
+  left: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+}
 
 .moon-target-anchor {
   position: absolute;
@@ -1871,7 +2029,10 @@ body {
   box-shadow: 0 0 12px var(--accent-cyan);
   transform: translate(-50%, -50%) translate(0, -74px);
   transform-origin: 50% 50%;
-  transition: opacity 0.3s ease, background 0.3s ease, border 0.3s ease;
+  transition:
+    opacity 0.3s ease,
+    background 0.3s ease,
+    border 0.3s ease;
 }
 
 .moon-target-indicator.below-horizon {
@@ -1907,7 +2068,10 @@ body {
   box-shadow: 0 0 12px var(--accent-gold);
   transform: translate(-50%, -50%) translate(0, -74px);
   transform-origin: 50% 50%;
-  transition: opacity 0.3s ease, background 0.3s ease, border 0.3s ease;
+  transition:
+    opacity 0.3s ease,
+    background 0.3s ease,
+    border 0.3s ease;
 }
 
 .sun-target-indicator.below-horizon {
@@ -1952,8 +2116,13 @@ body {
 }
 
 @keyframes bouncePointer {
-  0%, 100% { transform: translate(-50%, -55%); }
-  50% { transform: translate(-50%, -45%); }
+  0%,
+  100% {
+    transform: translate(-50%, -55%);
+  }
+  50% {
+    transform: translate(-50%, -45%);
+  }
 }
 
 .altitude-gauge-container {
@@ -1983,6 +2152,15 @@ body {
   border-right: 1px solid var(--accent-cyan);
 }
 
+.altitude-target-band-sun {
+  position: absolute;
+  top: 0;
+  height: 100%;
+  background: rgba(246, 211, 101, 0.15);
+  border-left: 1px solid var(--accent-gold);
+  border-right: 1px solid var(--accent-gold);
+}
+
 .altitude-current-bar {
   position: absolute;
   top: 0;
@@ -1990,6 +2168,16 @@ body {
   height: 100%;
   width: 0;
   background: linear-gradient(to right, var(--accent-blue), var(--accent-cyan));
+  border-radius: 5px;
+}
+
+.altitude-current-bar-sun {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  width: 0;
+  background: linear-gradient(to right, #fda085, var(--accent-gold));
   border-radius: 5px;
 }
 
@@ -2036,4 +2224,615 @@ body {
 
 .find-sky-btn:active {
   transform: translateY(1px);
+}
+
+/* ==========================================================================
+   Locate Popover Menu in Navigation Dock
+   ========================================================================== */
+.locate-popover {
+  position: absolute;
+  bottom: calc(100% + 12px);
+  left: 50%;
+  transform: translateX(-50%) translateY(10px);
+  background: rgba(8, 10, 28, 0.95);
+  backdrop-filter: blur(20px) saturate(1.8);
+  -webkit-backdrop-filter: blur(20px) saturate(1.8);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: var(--radius-md);
+  padding: 0.5rem;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.7);
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  z-index: 1001;
+  min-width: 175px;
+  opacity: 0;
+  pointer-events: none;
+  transition:
+    opacity 0.3s cubic-bezier(0.25, 0.8, 0.25, 1),
+    transform 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
+.locate-popover.visible {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateX(-50%) translateY(0);
+}
+
+.popover-option {
+  background: transparent;
+  border: none;
+  border-radius: var(--radius-sm);
+  color: var(--text-secondary);
+  font-family: var(--font-body);
+  font-size: 0.85rem;
+  font-weight: 500;
+  padding: 0.6rem 1rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  text-align: left;
+  transition: var(--transition);
+  width: 100%;
+}
+
+.popover-option:hover {
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--text-primary);
+}
+
+.popover-option i {
+  font-size: 0.95rem;
+  width: 16px;
+  text-align: center;
+}
+
+#locate-sun-option i {
+  color: var(--accent-gold);
+}
+
+/* ==========================================================================
+   Settings Icon Button in Header
+   ========================================================================== */
+.settings-btn {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--border-color);
+  color: var(--text-secondary);
+  cursor: pointer;
+  font-size: 1.15rem;
+  padding: 0.65rem;
+  border-radius: var(--radius-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: var(--transition);
+  position: absolute;
+  top: 2rem;
+  right: 1.5rem;
+  z-index: 100;
+}
+
+.settings-btn:hover {
+  color: var(--accent-cyan);
+  background: rgba(255, 255, 255, 0.08);
+  border-color: var(--border-hover);
+  box-shadow: 0 0 10px rgba(0, 242, 254, 0.15);
+}
+
+.settings-btn:active {
+  transform: scale(0.95);
+}
+
+/* ==========================================================================
+   Settings Drawer Layout & Slide Animations
+   ========================================================================== */
+.settings-drawer {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: 3000;
+  display: flex;
+  justify-content: flex-end;
+  transition: visibility 0.4s;
+}
+
+.drawer-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(3, 4, 9, 0.65);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  transition: opacity 0.4s ease;
+  opacity: 0;
+}
+
+.settings-drawer:not(.hidden) .drawer-overlay {
+  opacity: 1;
+}
+
+.drawer-content {
+  position: relative;
+  width: 100%;
+  max-width: 380px;
+  height: 100%;
+  background: rgba(8, 10, 28, 0.94);
+  border-left: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 0; /* Full height sidebar, no rounding */
+  display: flex;
+  flex-direction: column;
+  box-shadow: -10px 0 40px rgba(0, 0, 0, 0.85);
+  transform: translateX(100%);
+  transition: transform 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+  z-index: 3001;
+}
+
+.settings-drawer:not(.hidden) .drawer-content {
+  transform: translateX(0);
+}
+
+.drawer-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.75rem 1.5rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.drawer-header h3 {
+  font-family: var(--font-heading);
+  font-size: 1.3rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  color: var(--text-primary);
+}
+
+.drawer-header h3 i {
+  color: var(--accent-cyan);
+}
+
+.close-settings-btn {
+  background: transparent;
+  border: none;
+  color: var(--text-secondary);
+  font-size: 1.25rem;
+  cursor: pointer;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: var(--transition);
+}
+
+.close-settings-btn:hover {
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--text-primary);
+}
+
+.drawer-body {
+  padding: 1.75rem 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  overflow-y: auto;
+}
+
+.setting-group {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.setting-group h4 {
+  font-family: var(--font-heading);
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  color: var(--text-secondary);
+}
+
+.setting-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+}
+
+.setting-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  min-width: 0;
+}
+
+.setting-info h4 {
+  font-family: var(--font-heading);
+  font-size: 1rem;
+  font-weight: 550;
+  text-transform: none;
+  letter-spacing: 0;
+  color: var(--text-primary);
+}
+
+.setting-info p {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  line-height: 1.35;
+}
+
+.setting-divider {
+  height: 1px;
+  background: rgba(255, 255, 255, 0.06);
+}
+
+/* ==========================================================================
+   Switch Toggle Slider Styles
+   ========================================================================== */
+.switch {
+  position: relative;
+  display: inline-block;
+  width: 44px;
+  height: 24px;
+  flex-shrink: 0;
+}
+
+.switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  transition: 0.3s;
+  border-radius: 24px;
+}
+
+.slider:before {
+  position: absolute;
+  content: "";
+  height: 16px;
+  width: 16px;
+  left: 3px;
+  bottom: 3px;
+  background-color: var(--text-secondary);
+  transition: 0.3s cubic-bezier(0.25, 0.8, 0.25, 1.1);
+  border-radius: 50%;
+}
+
+input:checked + .slider {
+  background-color: rgba(0, 242, 254, 0.15);
+  border-color: var(--accent-cyan);
+}
+
+input:checked + .slider:before {
+  transform: translateX(20px);
+  background-color: var(--accent-cyan);
+  box-shadow: 0 0 8px var(--accent-cyan);
+}
+
+/* Category Indicators */
+.cat-label {
+  font-family: var(--font-heading);
+  font-size: 0.92rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.cat-eclipse {
+  color: #f87171;
+}
+
+.cat-meteor {
+  color: var(--accent-gold);
+}
+
+.cat-moon {
+  color: var(--accent-cyan);
+}
+
+/* ==========================================================================
+   Celestial Timeline Card System
+   ========================================================================== */
+.timeline-section {
+  padding: 1.5rem;
+}
+
+.timeline-header-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.timeline-header-container h3 {
+  font-family: var(--font-heading);
+  font-size: 1.2rem;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.timeline-header-container h3 i {
+  color: var(--accent-cyan);
+  text-shadow: 0 0 8px rgba(0, 242, 254, 0.3);
+}
+
+.timeline-tabs {
+  display: flex;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--border-color);
+  padding: 2px;
+  border-radius: var(--radius-sm);
+  gap: 2px;
+}
+
+.timeline-tab-btn {
+  background: transparent;
+  border: none;
+  color: var(--text-secondary);
+  padding: 0.35rem 0.75rem;
+  font-size: 0.8rem;
+  font-weight: 500;
+  font-family: var(--font-body);
+  cursor: pointer;
+  border-radius: 6px;
+  transition: var(--transition);
+}
+
+.timeline-tab-btn.active {
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--text-primary);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+}
+
+.timeline-container {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+  position: relative;
+}
+
+/* Timeline Vertical Line */
+.timeline-container::before {
+  content: "";
+  position: absolute;
+  top: 12px;
+  bottom: 12px;
+  left: 22px;
+  width: 1px;
+  background: linear-gradient(
+    to bottom,
+    rgba(255, 255, 255, 0.08) 0%,
+    rgba(255, 255, 255, 0.02) 100%
+  );
+  pointer-events: none;
+}
+
+.timeline-card {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+  padding: 0.85rem 1rem;
+  background: rgba(255, 255, 255, 0.01);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  transition: var(--transition);
+  cursor: pointer;
+  position: relative;
+  z-index: 1;
+}
+
+.timeline-card:hover {
+  background: rgba(255, 255, 255, 0.03);
+  border-color: var(--border-hover);
+  transform: translateX(4px);
+}
+
+.timeline-icon-box {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid var(--border-color);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.15rem;
+  flex-shrink: 0;
+  transition: var(--transition);
+}
+
+/* Color Categories */
+.timeline-card[data-category="eclipse"] .timeline-icon-box {
+  color: #f87171;
+  border-color: rgba(248, 113, 113, 0.2);
+  background: rgba(248, 113, 113, 0.04);
+  box-shadow: 0 0 10px rgba(248, 113, 113, 0.05);
+}
+
+.timeline-card[data-category="meteor"] .timeline-icon-box {
+  color: var(--accent-gold);
+  border-color: rgba(246, 211, 101, 0.2);
+  background: rgba(246, 211, 101, 0.04);
+  box-shadow: 0 0 10px rgba(246, 211, 101, 0.05);
+}
+
+.timeline-card[data-category="moon"] .timeline-icon-box {
+  color: var(--accent-cyan);
+  border-color: rgba(0, 242, 254, 0.2);
+  background: rgba(0, 242, 254, 0.04);
+  box-shadow: 0 0 10px rgba(0, 242, 254, 0.05);
+}
+
+.timeline-details {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  min-width: 0;
+  flex-grow: 1;
+}
+
+.timeline-details h4 {
+  font-family: var(--font-heading);
+  font-size: 0.95rem;
+  font-weight: 550;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.timeline-meta {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.timeline-date {
+  font-size: 0.78rem;
+  color: var(--text-secondary);
+}
+
+.timeline-badge {
+  font-size: 0.65rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  padding: 0.15rem 0.45rem;
+  border-radius: 4px;
+  letter-spacing: 0.5px;
+}
+
+.timeline-card[data-category="eclipse"] .timeline-badge {
+  background: rgba(248, 113, 113, 0.1);
+  color: #f87171;
+  border: 1px solid rgba(248, 113, 113, 0.15);
+}
+
+.timeline-card[data-category="meteor"] .timeline-badge {
+  background: rgba(246, 211, 101, 0.1);
+  color: var(--accent-gold);
+  border: 1px solid rgba(246, 211, 101, 0.15);
+}
+
+.timeline-card[data-category="moon"] .timeline-badge {
+  background: rgba(0, 242, 254, 0.1);
+  color: var(--accent-cyan);
+  border: 1px solid rgba(0, 242, 254, 0.15);
+}
+
+.timeline-countdown {
+  font-family: var(--font-body);
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--accent-gold);
+  white-space: nowrap;
+  text-align: right;
+  flex-shrink: 0;
+}
+
+.timeline-card[data-category="eclipse"] .timeline-countdown {
+  color: #f87171;
+}
+
+.timeline-card[data-category="moon"] .timeline-countdown {
+  color: var(--accent-cyan);
+}
+
+/* Slide out functionality */
+.settings-drawer.hidden {
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.settings-drawer.hidden .drawer-overlay {
+  opacity: 0;
+}
+
+.settings-drawer.hidden .drawer-content {
+  transform: translateX(100%);
+}
+
+@media (max-width: 768px) {
+  .timeline-header-container {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .timeline-tabs {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .timeline-tab-btn {
+    flex-grow: 1;
+    text-align: center;
+    padding: 0.35rem 0.5rem;
+  }
+}
+
+.no-events-message {
+  padding: 2rem;
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 0.9rem;
+  font-style: italic;
+  background: rgba(255, 255, 255, 0.01);
+  border: 1px dashed var(--border-color);
+  border-radius: var(--radius-md);
+  margin-top: 0.5rem;
+}
+
+.timeline-toggle-btn {
+  cursor: pointer;
+  user-select: none;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-grow: 1;
+  transition: var(--transition);
+}
+
+.timeline-toggle-btn:hover {
+  color: var(--accent-cyan);
+}
+
+.toggle-chevron {
+  font-size: 0.85rem;
+  margin-left: auto;
+  margin-right: 1rem;
+  transition: transform 0.3s ease;
+  color: var(--text-muted);
+}
+
+.timeline-section.collapsed .toggle-chevron {
+  transform: rotate(180deg);
+}
+
+.timeline-section.collapsed .timeline-container,
+.timeline-section.collapsed .timeline-tabs {
+  display: none !important;
 }

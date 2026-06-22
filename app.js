@@ -33,7 +33,9 @@ const state = {
         sunAz: 0,
         sunAlt: 0,
         targetMode: 'moon',
-        hasVibrated: false
+        hasVibrated: false,
+        useCamera: localStorage.getItem('lumina_compass_camera') !== 'false',
+        stream: null
     }
 };
 
@@ -94,7 +96,24 @@ const DOM = {
     nextMonthBtn: document.getElementById('next-month-btn'),
     calendarDays: document.getElementById('calendar-days'),
     
-    eventsGrid: document.getElementById('events-grid')
+    // Settings Drawer
+    settingsBtn: document.getElementById('settings-btn'),
+    closeSettingsBtn: document.getElementById('close-settings-btn'),
+    settingsDrawer: document.getElementById('settings-drawer'),
+    drawerOverlay: document.getElementById('drawer-overlay'),
+    
+    // Preferences Toggles
+    prefMasterAlerts: document.getElementById('pref-master-alerts'),
+    prefCatEclipses: document.getElementById('pref-cat-eclipses'),
+    prefCatMeteors: document.getElementById('pref-cat-meteors'),
+    prefCatMoons: document.getElementById('pref-cat-moons'),
+    
+    // Timeline Section
+    timelineContainer: document.getElementById('timeline-container'),
+    tabAll: document.getElementById('tab-all'),
+    tabEclipses: document.getElementById('tab-eclipses'),
+    tabMeteors: document.getElementById('tab-meteors'),
+    tabMoons: document.getElementById('tab-moons')
 };
 
 // ==========================================================================
@@ -102,6 +121,7 @@ const DOM = {
 // ==========================================================================
 document.addEventListener('DOMContentLoaded', () => {
     loadSavedLocation();
+    loadSettings();
     setupEventListeners();
     updateClock();
     setInterval(updateClock, 60000); // Update clock every minute
@@ -234,25 +254,24 @@ function setupEventListeners() {
     if (solarRow) solarRow.addEventListener('click', toggleCard);
 
     // Compass Locator Overlay functionality
-    const compassOverlay = document.getElementById('compass-overlay');
-    const findSkyBtn = document.getElementById('find-sky-btn');
-    const closeCompassBtn = document.getElementById('close-compass-btn');
-    const compassDial = document.getElementById('compass-dial');
-    const moonTargetAnchor = document.getElementById('moon-target-anchor');
-    const sunTargetAnchor = document.getElementById('sun-target-anchor');
-    const moonIndicator = document.querySelector('.moon-target-indicator');
-    const sunIndicator = document.querySelector('.sun-target-indicator');
-    const sunWarningEl = document.querySelector('.sun-warning');
-    const currentTiltEl = document.getElementById('current-tilt');
-    const targetAltitudeEl = document.getElementById('target-altitude');
-    const altitudeCurrentBar = document.getElementById('altitude-current-bar');
-    const altitudeTargetBand = document.getElementById('altitude-target-band');
-    const compassStatus = document.getElementById('compass-status');
+    // Hold active DOM element references for the active compass modal
+    let activeElements = {
+        overlay: null,
+        dial: null,
+        anchor: null,
+        indicator: null,
+        warning: null,
+        currentTilt: null,
+        targetAltitude: null,
+        currentBar: null,
+        targetBand: null,
+        status: null
+    };
 
     let orientationHandlerBound = false;
 
     function handleOrientation(e) {
-        if (!state.compass.active) return;
+        if (!state.compass.active || !activeElements.overlay) return;
 
         // Determine active target based on mode
         const targetAz = state.compass.targetMode === 'sun' ? state.compass.sunAz : state.compass.targetAz;
@@ -272,59 +291,61 @@ function setupEventListeners() {
         tilt = Math.max(0, Math.min(90, tilt));
 
         if (heading === null) {
-            compassStatus.textContent = "Waiting for compass alignment...";
+            if (activeElements.status) activeElements.status.textContent = "Waiting for compass alignment...";
             return;
         }
 
         // 3. Update Compass Dial Rotation
         // Rotate the dial by -heading so N always points North
-        compassDial.style.transform = `rotate(${-heading}deg)`;
-
-        // 4. Update Target Moon and Sun Angles on the dial
-        moonTargetAnchor.style.transform = `rotate(${state.compass.targetAz}deg)`;
-        if (sunTargetAnchor) {
-            sunTargetAnchor.style.transform = `rotate(${state.compass.sunAz}deg)`;
+        if (activeElements.dial) {
+            activeElements.dial.style.transform = `rotate(${-heading}deg)`;
         }
 
-        // Toggle below-horizon styling if they are set
-        if (moonIndicator) {
-            if (state.compass.targetAlt < 0) {
-                moonIndicator.classList.add('below-horizon');
-            } else {
-                moonIndicator.classList.remove('below-horizon');
-            }
+        // 4. Update Target Moon/Sun Angles on the dial
+        if (activeElements.anchor) {
+            activeElements.anchor.style.transform = `rotate(${targetAz}deg)`;
         }
-        if (sunIndicator) {
-            if (state.compass.sunAlt < 0) {
-                sunIndicator.classList.add('below-horizon');
+
+        // Toggle below-horizon styling
+        if (activeElements.indicator) {
+            if (targetAlt < 0) {
+                activeElements.indicator.classList.add('below-horizon');
             } else {
-                sunIndicator.classList.remove('below-horizon');
+                activeElements.indicator.classList.remove('below-horizon');
             }
         }
 
         // Show Sun warning dynamically if pointing close to the Sun (within 30 deg) and the Sun is above the horizon
-        if (sunWarningEl) {
+        if (state.compass.targetMode === 'sun' && activeElements.warning) {
             let diffToSun = state.compass.sunAz - heading;
             while (diffToSun > 180) diffToSun -= 360;
             while (diffToSun < -180) diffToSun += 360;
 
             if (state.compass.sunAlt > 0 && Math.abs(diffToSun) < 30) {
-                sunWarningEl.classList.remove('hidden');
+                activeElements.warning.classList.remove('hidden');
             } else {
-                sunWarningEl.classList.add('hidden');
+                activeElements.warning.classList.add('hidden');
             }
         }
 
         // 5. Update Altitude Gauge
-        currentTiltEl.textContent = `${Math.round(tilt)}°`;
-        targetAltitudeEl.textContent = `${Math.round(targetAlt)}°`;
+        if (activeElements.currentTilt) {
+            activeElements.currentTilt.textContent = `${Math.round(tilt)}°`;
+        }
+        if (activeElements.targetAltitude) {
+            activeElements.targetAltitude.textContent = `${Math.round(targetAlt)}°`;
+        }
 
-        const tiltPct = (tilt / 90) * 100;
-        altitudeCurrentBar.style.width = `${tiltPct}%`;
+        if (activeElements.currentBar) {
+            const tiltPct = (tilt / 90) * 100;
+            activeElements.currentBar.style.width = `${tiltPct}%`;
+        }
 
-        const targetAltPct = (targetAlt / 90) * 100;
-        altitudeTargetBand.style.left = `${Math.max(0, targetAltPct - 5)}%`;
-        altitudeTargetBand.style.width = '10%';
+        if (activeElements.targetBand) {
+            const targetAltPct = (targetAlt / 90) * 100;
+            activeElements.targetBand.style.left = `${Math.max(0, targetAltPct - 5)}%`;
+            activeElements.targetBand.style.width = '10%';
+        }
 
         // 6. Calculate directional differences
         let diffAz = targetAz - heading;
@@ -334,25 +355,121 @@ function setupEventListeners() {
         const diffAlt = targetAlt - tilt;
 
         // 7. Render status instructions
-        if (Math.abs(diffAz) < 6) {
-            // Azimuth is aligned! Now align altitude
-            if (Math.abs(diffAlt) < 6) {
-                compassStatus.textContent = "Aligned! Look Up!";
-                compassStatus.className = "compass-status aligned";
-                if (!state.compass.hasVibrated) {
-                    if (navigator.vibrate) navigator.vibrate(120);
-                    state.compass.hasVibrated = true;
+        if (activeElements.status) {
+            if (Math.abs(diffAz) < 6) {
+                // Azimuth is aligned! Now align altitude
+                if (Math.abs(diffAlt) < 6) {
+                    activeElements.status.textContent = "Aligned! Look Up!";
+                    activeElements.status.className = "compass-status aligned";
+                    if (activeElements.reticle) {
+                        activeElements.reticle.classList.add('aligned');
+                    }
+                    if (!state.compass.hasVibrated) {
+                        if (navigator.vibrate) navigator.vibrate(120);
+                        state.compass.hasVibrated = true;
+                    }
+                } else {
+                    activeElements.status.textContent = diffAlt > 0 ? "Tilt Phone Up ⬆️" : "Tilt Phone Down ⬇️";
+                    activeElements.status.className = "compass-status";
+                    if (activeElements.reticle) {
+                        activeElements.reticle.classList.remove('aligned');
+                    }
+                    state.compass.hasVibrated = false;
                 }
             } else {
-                compassStatus.textContent = diffAlt > 0 ? "Tilt Phone Up ⬆️" : "Tilt Phone Down ⬇️";
-                compassStatus.className = "compass-status";
+                // Guide azimuth alignment
+                activeElements.status.textContent = diffAz > 0 ? "Turn Right ➡️" : "Turn Left ⬅️";
+                activeElements.status.className = "compass-status";
+                if (activeElements.reticle) {
+                    activeElements.reticle.classList.remove('aligned');
+                }
                 state.compass.hasVibrated = false;
             }
+        }
+    }
+
+    async function startCamera() {
+        if (!state.compass.useCamera) {
+            stopCameraStream();
+            return;
+        }
+        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+            console.warn("Camera access not supported on this device/browser.");
+            return;
+        }
+
+        const isSun = state.compass.targetMode === 'sun';
+        const videoEl = isSun ? document.getElementById('camera-video-sun') : document.getElementById('camera-video-moon');
+        const btnEl = isSun ? document.getElementById('camera-toggle-sun') : document.getElementById('camera-toggle-moon');
+
+        try {
+            const constraints = {
+                video: {
+                    facingMode: 'environment',
+                    width: { ideal: 1280 },
+                    height: { ideal: 720 }
+                },
+                audio: false
+            };
+            const stream = await navigator.mediaDevices.getUserMedia(constraints);
+            state.compass.stream = stream;
+
+            if (videoEl) {
+                videoEl.srcObject = stream;
+                videoEl.classList.remove('hidden');
+                await videoEl.play().catch(e => console.error("Error playing video stream:", e));
+            }
+
+            if (activeElements.overlay) {
+                activeElements.overlay.classList.add('camera-active');
+            }
+            if (btnEl) {
+                btnEl.classList.add('active');
+            }
+        } catch (err) {
+            console.error("Error accessing camera stream:", err);
+            stopCameraStream();
+            if (btnEl) {
+                btnEl.classList.remove('active');
+            }
+        }
+    }
+
+    function stopCameraStream() {
+        if (state.compass.stream) {
+            state.compass.stream.getTracks().forEach(track => track.stop());
+            state.compass.stream = null;
+        }
+
+        const videoElMoon = document.getElementById('camera-video-moon');
+        const videoElSun = document.getElementById('camera-video-sun');
+        if (videoElMoon) {
+            videoElMoon.srcObject = null;
+            videoElMoon.classList.add('hidden');
+        }
+        if (videoElSun) {
+            videoElSun.srcObject = null;
+            videoElSun.classList.add('hidden');
+        }
+
+        const overlayMoon = document.getElementById('compass-overlay-moon');
+        const overlaySun = document.getElementById('compass-overlay-sun');
+        if (overlayMoon) overlayMoon.classList.remove('camera-active');
+        if (overlaySun) overlaySun.classList.remove('camera-active');
+
+        const btnElMoon = document.getElementById('camera-toggle-moon');
+        const btnElSun = document.getElementById('camera-toggle-sun');
+        if (btnElMoon) btnElMoon.classList.remove('active');
+        if (btnElSun) btnElSun.classList.remove('active');
+    }
+
+    function toggleCameraMode() {
+        state.compass.useCamera = !state.compass.useCamera;
+        localStorage.setItem('lumina_compass_camera', state.compass.useCamera);
+        if (state.compass.useCamera) {
+            startCamera();
         } else {
-            // Guide azimuth alignment
-            compassStatus.textContent = diffAz > 0 ? "Turn Right ➡️" : "Turn Left ⬅️";
-            compassStatus.className = "compass-status";
-            state.compass.hasVibrated = false;
+            stopCameraStream();
         }
     }
 
@@ -360,17 +477,33 @@ function setupEventListeners() {
         state.compass.targetMode = mode;
         state.compass.active = true;
         state.compass.hasVibrated = false;
-        compassOverlay.classList.remove('hidden');
+
+        const isSun = mode === 'sun';
+        activeElements.overlay = isSun ? document.getElementById('compass-overlay-sun') : document.getElementById('compass-overlay-moon');
+        activeElements.dial = isSun ? document.getElementById('compass-dial-sun') : document.getElementById('compass-dial-moon');
+        activeElements.anchor = isSun ? activeElements.overlay.querySelector('.sun-target-anchor') : activeElements.overlay.querySelector('.moon-target-anchor');
+        activeElements.indicator = isSun ? activeElements.overlay.querySelector('.sun-target-indicator') : activeElements.overlay.querySelector('.moon-target-indicator');
+        activeElements.warning = isSun ? activeElements.overlay.querySelector('.sun-warning') : null;
+        activeElements.reticle = isSun ? document.getElementById('compass-reticle-sun') : document.getElementById('compass-reticle-moon');
+        
+        activeElements.currentTilt = isSun ? document.getElementById('current-tilt-sun') : document.getElementById('current-tilt-moon');
+        activeElements.targetAltitude = isSun ? document.getElementById('target-altitude-sun') : document.getElementById('target-altitude-moon');
+        activeElements.currentBar = isSun ? document.getElementById('altitude-current-bar-sun') : document.getElementById('altitude-current-bar-moon');
+        activeElements.targetBand = isSun ? document.getElementById('altitude-target-band-sun') : document.getElementById('altitude-target-band-moon');
+        activeElements.status = isSun ? document.getElementById('compass-status-sun') : document.getElementById('compass-status-moon');
+
+        if (activeElements.overlay) {
+            activeElements.overlay.classList.remove('hidden');
+        }
         document.body.style.overflow = 'hidden'; // prevent scrolling behind
 
-        // Initialize target labels and headers
-        const compassTitle = compassOverlay.querySelector('h3');
-        if (compassTitle) {
-            compassTitle.textContent = mode === 'sun' ? "Locate the Sun" : "Locate the Moon";
-        }
-        
         const targetAlt = mode === 'sun' ? state.compass.sunAlt : state.compass.targetAlt;
-        targetAltitudeEl.textContent = `${Math.round(targetAlt)}°`;
+        if (activeElements.targetAltitude) {
+            activeElements.targetAltitude.textContent = `${Math.round(targetAlt)}°`;
+        }
+
+        // Start camera stream if enabled
+        startCamera();
 
         if (window.DeviceOrientationEvent && typeof window.DeviceOrientationEvent.requestPermission === 'function') {
             // iOS Safari requires permission
@@ -379,12 +512,16 @@ function setupEventListeners() {
                     if (response === 'granted') {
                         activateCompassListeners();
                     } else {
-                        compassStatus.textContent = "Permission denied. Enable motion sensors.";
+                        if (activeElements.status) {
+                            activeElements.status.textContent = "Permission denied. Enable motion sensors.";
+                        }
                     }
                 })
                 .catch(err => {
                     console.error("iOS permission error", err);
-                    compassStatus.textContent = "Error initializing sensors.";
+                    if (activeElements.status) {
+                        activeElements.status.textContent = "Error initializing sensors.";
+                    }
                 });
         } else {
             // Android/Standard browsers
@@ -406,7 +543,13 @@ function setupEventListeners() {
 
     function stopCompass() {
         state.compass.active = false;
-        compassOverlay.classList.add('hidden');
+        
+        // Stop camera stream
+        stopCameraStream();
+
+        if (activeElements.overlay) {
+            activeElements.overlay.classList.add('hidden');
+        }
         document.body.style.overflow = ''; // restore scrolling
 
         if (orientationHandlerBound) {
@@ -414,16 +557,156 @@ function setupEventListeners() {
             window.removeEventListener('deviceorientation', handleOrientation, true);
             orientationHandlerBound = false;
         }
+
+        // Reset references
+        activeElements.overlay = null;
+        activeElements.dial = null;
+        activeElements.anchor = null;
+        activeElements.indicator = null;
+        activeElements.warning = null;
+        activeElements.reticle = null;
+        activeElements.currentTilt = null;
+        activeElements.targetAltitude = null;
+        activeElements.currentBar = null;
+        activeElements.targetBand = null;
+        activeElements.status = null;
     }
 
-    const findSkySunBtn = document.getElementById('find-sky-sun-btn');
-    if (findSkyBtn) findSkyBtn.addEventListener('click', () => startCompass('moon'));
-    if (findSkySunBtn) findSkySunBtn.addEventListener('click', () => startCompass('sun'));
-    if (closeCompassBtn) closeCompassBtn.addEventListener('click', stopCompass);
-    if (compassOverlay) {
-        // Also close if clicking outside modal
-        compassOverlay.addEventListener('click', (e) => {
-            if (e.target === compassOverlay) stopCompass();
+    // Popover locator elements
+    const navLocate = document.getElementById('nav-locate');
+    const locatePopover = document.getElementById('locate-popover');
+    const locateMoonOption = document.getElementById('locate-moon-option');
+    const locateSunOption = document.getElementById('locate-sun-option');
+    const closeCompassMoonBtn = document.getElementById('close-compass-moon-btn');
+    const closeCompassSunBtn = document.getElementById('close-compass-sun-btn');
+    const compassOverlayMoon = document.getElementById('compass-overlay-moon');
+    const compassOverlaySun = document.getElementById('compass-overlay-sun');
+
+    if (navLocate && locatePopover) {
+        navLocate.addEventListener('click', (e) => {
+            e.stopPropagation();
+            locatePopover.classList.toggle('visible');
+            navLocate.classList.toggle('active');
+        });
+
+        if (locateMoonOption) {
+            locateMoonOption.addEventListener('click', () => {
+                locatePopover.classList.remove('visible');
+                navLocate.classList.remove('active');
+                startCompass('moon');
+            });
+        }
+        if (locateSunOption) {
+            locateSunOption.addEventListener('click', () => {
+                locatePopover.classList.remove('visible');
+                navLocate.classList.remove('active');
+                startCompass('sun');
+            });
+        }
+
+        // Close popover when clicking anywhere else on screen
+        document.addEventListener('click', (e) => {
+            if (!locatePopover.contains(e.target) && e.target !== navLocate) {
+                locatePopover.classList.remove('visible');
+                navLocate.classList.remove('active');
+            }
+        });
+    }
+
+    if (closeCompassMoonBtn) closeCompassMoonBtn.addEventListener('click', stopCompass);
+    if (closeCompassSunBtn) closeCompassSunBtn.addEventListener('click', stopCompass);
+
+    const cameraToggleMoon = document.getElementById('camera-toggle-moon');
+    const cameraToggleSun = document.getElementById('camera-toggle-sun');
+
+    if (cameraToggleMoon) {
+        cameraToggleMoon.addEventListener('click', (e) => {
+            e.stopPropagation();
+            toggleCameraMode();
+        });
+    }
+    if (cameraToggleSun) {
+        cameraToggleSun.addEventListener('click', (e) => {
+            e.stopPropagation();
+            toggleCameraMode();
+        });
+    }
+    
+    if (compassOverlayMoon) {
+        compassOverlayMoon.addEventListener('click', (e) => {
+            if (e.target === compassOverlayMoon) stopCompass();
+        });
+    }
+    if (compassOverlaySun) {
+        compassOverlaySun.addEventListener('click', (e) => {
+            if (e.target === compassOverlaySun) stopCompass();
+        });
+    }
+
+    // Settings Drawer toggling
+    if (DOM.settingsBtn && DOM.settingsDrawer) {
+        DOM.settingsBtn.addEventListener('click', () => {
+            DOM.settingsDrawer.classList.remove('hidden');
+        });
+    }
+    if (DOM.closeSettingsBtn && DOM.settingsDrawer) {
+        DOM.closeSettingsBtn.addEventListener('click', () => {
+            DOM.settingsDrawer.classList.add('hidden');
+        });
+    }
+    if (DOM.drawerOverlay && DOM.settingsDrawer) {
+        DOM.drawerOverlay.addEventListener('click', () => {
+            DOM.settingsDrawer.classList.add('hidden');
+        });
+    }
+
+    // Settings preferences change handlers
+    if (DOM.prefMasterAlerts) {
+        DOM.prefMasterAlerts.addEventListener('change', async () => {
+            if (DOM.prefMasterAlerts.checked) {
+                const permission = await Notification.requestPermission();
+                if (permission !== 'granted') {
+                    DOM.prefMasterAlerts.checked = false;
+                    alert('Notification permission is required to enable alerts.');
+                }
+            }
+            saveSettings();
+            renderUpcomingEvents();
+            checkAndTriggerNotifications();
+        });
+    }
+
+    ['prefCatEclipses', 'prefCatMeteors', 'prefCatMoons'].forEach(prefKey => {
+        if (DOM[prefKey]) {
+            DOM[prefKey].addEventListener('change', () => {
+                saveSettings();
+                renderUpcomingEvents();
+            });
+        }
+    });
+
+    // Timeline tab handlers
+    const timelineTabs = [DOM.tabAll, DOM.tabEclipses, DOM.tabMeteors, DOM.tabMoons];
+    timelineTabs.forEach(tab => {
+        if (tab) {
+            tab.addEventListener('click', () => {
+                timelineTabs.forEach(t => t.classList.remove('active'));
+                tab.classList.add('active');
+                renderUpcomingEvents();
+            });
+        }
+    });
+
+    // Toggle Celestial Timeline collapse
+    const timelineToggle = document.getElementById('timeline-toggle-btn');
+    if (timelineToggle) {
+        timelineToggle.addEventListener('click', () => {
+            const section = timelineToggle.closest('.timeline-section');
+            if (section) {
+                section.classList.toggle('collapsed');
+                const isCollapsed = section.classList.contains('collapsed');
+                localStorage.setItem('lumina_timeline_collapsed', isCollapsed);
+            }
         });
     }
 }
@@ -512,6 +795,7 @@ function triggerUpdate() {
     setDateOffset(0);
     renderCalendar();
     renderUpcomingEvents();
+    checkAndTriggerNotifications();
 }
 
 // ==========================================================================
@@ -938,120 +1222,128 @@ function highlightActiveCalendarCell() {
 }
 
 // ==========================================================================
-// Lunar Events Phase Crossings Calculator (Forward Solver)
+// Celestial Timeline & Astronomy Solvers
 // ==========================================================================
 function renderUpcomingEvents() {
-    DOM.eventsGrid.innerHTML = '';
+    if (!DOM.timelineContainer) return;
+    DOM.timelineContainer.innerHTML = '';
     
-    const phases = [
-        { name: 'New Moon', target: 0.0, icon: 'new' },
-        { name: 'First Quarter', target: 0.25, icon: 'first-quarter' },
-        { name: 'Full Moon', target: 0.5, icon: 'full' },
-        { name: 'Last Quarter', target: 0.75, icon: 'last-quarter' }
-    ];
+    const showEclipses = DOM.prefCatEclipses ? DOM.prefCatEclipses.checked : true;
+    const showMeteors = DOM.prefCatMeteors ? DOM.prefCatMeteors.checked : true;
+    const showMoons = DOM.prefCatMoons ? DOM.prefCatMoons.checked : true;
     
-    // Start search from today
-    let t = new Date(state.today.getTime());
-    const maxTime = t.getTime() + 32 * 24 * 60 * 60 * 1000;
-    
-    let prevIllum = SunCalc.getMoonIllumination(t);
-    const step = 60 * 60 * 1000; // 1 hour steps
-    
-    const foundEvents = [];
-    
-    while (t.getTime() < maxTime && foundEvents.length < 4) {
-        t.setTime(t.getTime() + step);
-        const currIllum = SunCalc.getMoonIllumination(t);
-        
-        const p0 = prevIllum.phase;
-        const p1 = currIllum.phase;
-        
-        phases.forEach(phase => {
-            // Check if already found
-            if (foundEvents.some(e => e.name === phase.name)) return;
-            
-            let crossed = false;
-            if (phase.target === 0.0) {
-                // Crossing wrap-around (1.0 -> 0.0)
-                crossed = (p0 > p1 && p0 > 0.95 && p1 < 0.05);
-            } else {
-                crossed = (p0 <= phase.target && p1 >= phase.target) || 
-                          (p0 >= phase.target && p1 <= phase.target && Math.abs(p0 - p1) < 0.2);
-            }
-            
-            if (crossed) {
-                let refinedTime;
-                if (phase.target === 0.0) {
-                    const d0 = 1 - p0;
-                    const d1 = p1;
-                    const frac = d0 / (d0 + d1);
-                    refinedTime = new Date(t.getTime() - step + step * frac);
-                } else {
-                    const frac = (phase.target - p0) / (p1 - p0);
-                    refinedTime = new Date(t.getTime() - step + step * frac);
-                }
-                
-                foundEvents.push({
-                    name: phase.name,
-                    target: phase.target,
-                    date: refinedTime
-                });
-            }
-        });
-        
-        prevIllum = currIllum;
+    let events = [];
+    if (showMoons) {
+        events = events.concat(getMoonPhasesAndSupermoons(state.today, 12));
+    }
+    if (showEclipses) {
+        events = events.concat(getLunarEclipses(state.today, 12));
+        events = events.concat(getLocalSolarEclipses(state.today, state.location.lat, state.location.lon, 12));
+    }
+    if (showMeteors) {
+        events = events.concat(getMeteorShowers(state.today, 12));
     }
     
-    // Sort events chronological
-    foundEvents.sort((a, b) => a.date.getTime() - b.date.getTime());
+    events.sort((a, b) => a.date.getTime() - b.date.getTime());
     
-    // Draw events cards
-    foundEvents.forEach(evt => {
-        const item = document.createElement('div');
-        item.className = 'event-item';
+    let activeCategory = 'all';
+    const activeTab = document.querySelector('.timeline-tab-btn.active');
+    if (activeTab) {
+        const id = activeTab.id;
+        if (id === 'tab-eclipses') activeCategory = 'eclipse';
+        else if (id === 'tab-meteors') activeCategory = 'meteor';
+        else if (id === 'tab-moons') activeCategory = 'moon';
+    }
+    
+    let filteredEvents = events;
+    if (activeCategory !== 'all') {
+        filteredEvents = events.filter(evt => evt.category === activeCategory);
+    }
+    
+    filteredEvents = filteredEvents.slice(0, 10);
+    
+    if (filteredEvents.length === 0) {
+        const noEvents = document.createElement('div');
+        noEvents.className = 'no-events-message';
+        noEvents.textContent = 'No upcoming events found matching criteria.';
+        DOM.timelineContainer.appendChild(noEvents);
+        return;
+    }
+    
+    filteredEvents.forEach(evt => {
+        const card = document.createElement('div');
+        card.className = 'timeline-card';
+        card.setAttribute('data-category', evt.category);
         
-        const canvas = document.createElement('canvas');
-        canvas.className = 'event-moon-canvas';
-        canvas.width = 88;
-        canvas.height = 88;
-        item.appendChild(canvas);
+        let iconClass = 'fa-moon';
+        if (evt.category === 'eclipse') {
+            iconClass = 'fa-circle-notch';
+        } else if (evt.category === 'meteor') {
+            iconClass = 'fa-meteor';
+        } else if (evt.category === 'moon') {
+            if (evt.isSuper) {
+                iconClass = 'fa-circle-nodes';
+            } else if (evt.quarterVal === 0) {
+                iconClass = 'fa-circle';
+            } else if (evt.quarterVal === 2) {
+                iconClass = 'fa-solid fa-circle';
+            }
+        }
         
-        // Draw mini-moon representing event
-        renderer.drawMini(canvas, evt.target);
+        const iconBox = document.createElement('div');
+        iconBox.className = 'timeline-icon-box';
+        iconBox.innerHTML = `<i class="fa-solid ${iconClass}"></i>`;
+        card.appendChild(iconBox);
         
-        const detailsDiv = document.createElement('div');
-        detailsDiv.className = 'event-details';
+        const details = document.createElement('div');
+        details.className = 'timeline-details';
         
         const h4 = document.createElement('h4');
         h4.textContent = evt.name;
-        detailsDiv.appendChild(h4);
+        details.appendChild(h4);
+        
+        const meta = document.createElement('div');
+        meta.className = 'timeline-meta';
         
         const dateSpan = document.createElement('span');
-        dateSpan.className = 'event-date';
-        dateSpan.textContent = evt.date.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' }) + 
-            ' at ' + evt.date.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit', hour12: false });
-        detailsDiv.appendChild(dateSpan);
+        dateSpan.className = 'timeline-date';
         
-        // Calculate countdown
+        const dateStr = evt.date.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' });
+        const timeStr = evt.date.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit', hour12: false });
+        dateSpan.textContent = `${dateStr} at ${timeStr}`;
+        meta.appendChild(dateSpan);
+        
+        const badge = document.createElement('span');
+        badge.className = 'timeline-badge';
+        let badgeText = 'Event';
+        if (evt.category === 'eclipse') badgeText = 'Eclipse';
+        else if (evt.category === 'meteor') badgeText = 'Meteor';
+        else if (evt.category === 'moon') badgeText = evt.isSuper ? 'Supermoon' : 'Moon Phase';
+        badge.textContent = badgeText;
+        meta.appendChild(badge);
+        
+        details.appendChild(meta);
+        card.appendChild(details);
+        
+        const countdown = document.createElement('div');
+        countdown.className = 'timeline-countdown';
+        
         const timeDiff = evt.date.getTime() - state.today.getTime();
         const days = Math.floor(timeDiff / (24 * 60 * 60 * 1000));
         const hrs = Math.floor((timeDiff % (24 * 60 * 60 * 1000)) / (60 * 60 * 1000));
         
-        const countdownSpan = document.createElement('span');
-        countdownSpan.className = 'event-countdown';
         if (days === 0 && hrs === 0) {
-            countdownSpan.textContent = 'Happening Now';
+            countdown.textContent = 'Happening Now';
         } else if (days === 0) {
-            countdownSpan.textContent = `In ${hrs}h`;
+            countdown.textContent = `In ${hrs}h`;
+        } else if (days < 0) {
+            countdown.textContent = 'Passed';
         } else {
-            countdownSpan.textContent = `In ${days}d ${hrs}h`;
+            countdown.textContent = `In ${days}d ${hrs}h`;
         }
-        detailsDiv.appendChild(countdownSpan);
+        card.appendChild(countdown);
         
-        item.appendChild(detailsDiv);
-        
-        // Click to jump main view to event date!
-        item.addEventListener('click', () => {
+        card.addEventListener('click', () => {
             const timeDiffSec = evt.date.getTime() - state.today.getTime();
             const daysDiff = Math.round(timeDiffSec / (24 * 60 * 60 * 1000));
             
@@ -1072,6 +1364,258 @@ function renderUpcomingEvents() {
             }
         });
         
-        DOM.eventsGrid.appendChild(item);
+        DOM.timelineContainer.appendChild(card);
     });
+}
+
+function getMoonPhasesAndSupermoons(startDate, durationMonths = 12) {
+    const events = [];
+    const endDate = new Date(startDate.getTime() + durationMonths * 30.44 * 24 * 60 * 60 * 1000);
+    const Astronomy = window.Astronomy;
+    if (!Astronomy) return events;
+    
+    try {
+        let activeTime = new Astronomy.AstroTime(startDate);
+        let mq = Astronomy.SearchMoonQuarter(activeTime);
+        
+        while (mq && mq.time.date.getTime() < endDate.getTime()) {
+            const date = mq.time.date;
+            let name = '';
+            let icon = '';
+            let isSuper = false;
+            
+            if (mq.quarter === 0) {
+                name = 'New Moon';
+                icon = 'new';
+            } else if (mq.quarter === 1) {
+                name = 'First Quarter';
+                icon = 'first-quarter';
+            } else if (mq.quarter === 2) {
+                name = 'Full Moon';
+                icon = 'full';
+                const moonGeo = Astronomy.GeoVector(Astronomy.Body.Moon, mq.time, true);
+                const distKm = Math.sqrt(moonGeo.x ** 2 + moonGeo.y ** 2 + moonGeo.z ** 2) * 149597870.7;
+                if (distKm < 361000) {
+                    name = 'Supermoon';
+                    icon = 'supermoon';
+                    isSuper = true;
+                }
+            } else if (mq.quarter === 3) {
+                name = 'Last Quarter';
+                icon = 'last-quarter';
+            }
+            
+            events.push({
+                id: `moon-${mq.quarter}-${date.getTime()}`,
+                name: name,
+                date: date,
+                category: 'moon',
+                icon: icon,
+                isSuper: isSuper,
+                quarterVal: mq.quarter
+            });
+            
+            mq = Astronomy.NextMoonQuarter(mq);
+        }
+    } catch (e) {
+        console.error('Error calculating moon quarters', e);
+    }
+    return events;
+}
+
+function getLunarEclipses(startDate, durationMonths = 12) {
+    const events = [];
+    const endDate = new Date(startDate.getTime() + durationMonths * 30.44 * 24 * 60 * 60 * 1000);
+    const Astronomy = window.Astronomy;
+    if (!Astronomy) return events;
+    
+    try {
+        let activeTime = new Astronomy.AstroTime(startDate);
+        let eclipse = Astronomy.SearchLunarEclipse(activeTime);
+        while (eclipse && eclipse.peak.date.getTime() < endDate.getTime()) {
+            const date = eclipse.peak.date;
+            
+            let kindStr = 'Lunar Eclipse';
+            if (eclipse.kind === 0) kindStr = 'Penumbral Lunar Eclipse';
+            else if (eclipse.kind === 1) kindStr = 'Partial Lunar Eclipse';
+            else if (eclipse.kind === 2) kindStr = 'Total Lunar Eclipse';
+            
+            events.push({
+                id: `lunar-eclipse-${date.getTime()}`,
+                name: kindStr,
+                date: date,
+                category: 'eclipse',
+                icon: 'lunar-eclipse',
+                kind: eclipse.kind
+            });
+            
+            eclipse = Astronomy.NextLunarEclipse(eclipse.peak);
+        }
+    } catch (e) {
+        console.error('Error searching lunar eclipses', e);
+    }
+    return events;
+}
+
+function getLocalSolarEclipses(startDate, lat, lon, durationMonths = 12) {
+    const events = [];
+    const endDate = new Date(startDate.getTime() + durationMonths * 30.44 * 24 * 60 * 60 * 1000);
+    const Astronomy = window.Astronomy;
+    if (!Astronomy) return events;
+    
+    const observer = new Astronomy.Observer(lat, lon, 0);
+    
+    try {
+        let activeTime = new Astronomy.AstroTime(startDate);
+        let eclipse = Astronomy.SearchLocalSolarEclipse(activeTime, observer);
+        while (eclipse && eclipse.peak.time.date.getTime() < endDate.getTime()) {
+            const date = eclipse.peak.time.date;
+            
+            if (eclipse.peak.altitude > 0) {
+                let kindStr = 'Solar Eclipse';
+                if (eclipse.kind === 0 || eclipse.kind === 'Partial') kindStr = 'Partial Solar Eclipse';
+                else if (eclipse.kind === 1 || eclipse.kind === 'Annular') kindStr = 'Annular Solar Eclipse';
+                else if (eclipse.kind === 2 || eclipse.kind === 'Total') kindStr = 'Total Solar Eclipse';
+                
+                events.push({
+                    id: `solar-eclipse-${date.getTime()}`,
+                    name: kindStr,
+                    date: date,
+                    category: 'eclipse',
+                    icon: 'solar-eclipse',
+                    kind: eclipse.kind
+                });
+            }
+            
+            eclipse = Astronomy.NextLocalSolarEclipse(eclipse.peak.time, observer);
+        }
+    } catch (e) {
+        console.error('Error searching solar eclipses', e);
+    }
+    return events;
+}
+
+function getMeteorShowers(startDate, durationMonths = 12) {
+    const events = [];
+    const endDate = new Date(startDate.getTime() + durationMonths * 30.44 * 24 * 60 * 60 * 1000);
+    
+    const showerPeaks = [
+        { name: 'Quadrantids', month: 0, day: 4 },
+        { name: 'Lyrids', month: 3, day: 22 },
+        { name: 'Eta Aquariids', month: 4, day: 6 },
+        { name: 'Perseids', month: 7, day: 12 },
+        { name: 'Orionids', month: 9, day: 21 },
+        { name: 'Leonids', month: 10, day: 17 },
+        { name: 'Geminids', month: 11, day: 14 },
+        { name: 'Ursids', month: 11, day: 22 }
+    ];
+    
+    const startYear = startDate.getFullYear();
+    const endYear = endDate.getFullYear();
+    
+    for (let year = startYear; year <= endYear; year++) {
+        showerPeaks.forEach(shower => {
+            const peakDate = new Date(year, shower.month, shower.day, 22, 0, 0);
+            if (peakDate.getTime() >= startDate.getTime() && peakDate.getTime() <= endDate.getTime()) {
+                events.push({
+                    id: `meteor-${shower.name.toLowerCase()}-${peakDate.getTime()}`,
+                    name: `${shower.name} Meteor Shower Peak`,
+                    date: peakDate,
+                    category: 'meteor',
+                    icon: 'meteor'
+                });
+            }
+        });
+    }
+    return events;
+}
+
+// ==========================================================================
+// Settings Panel Persistence & Notifications Engine
+// ==========================================================================
+function saveSettings() {
+    const preferences = {
+        masterAlerts: DOM.prefMasterAlerts ? DOM.prefMasterAlerts.checked : false,
+        catEclipses: DOM.prefCatEclipses ? DOM.prefCatEclipses.checked : true,
+        catMeteors: DOM.prefCatMeteors ? DOM.prefCatMeteors.checked : true,
+        catMoons: DOM.prefCatMoons ? DOM.prefCatMoons.checked : true
+    };
+    localStorage.setItem('lumina_notification_settings', JSON.stringify(preferences));
+}
+
+function loadSettings() {
+    try {
+        const stored = localStorage.getItem('lumina_notification_settings');
+        if (stored) {
+            const preferences = JSON.parse(stored);
+            if (DOM.prefMasterAlerts) DOM.prefMasterAlerts.checked = !!preferences.masterAlerts;
+            if (DOM.prefCatEclipses) DOM.prefCatEclipses.checked = preferences.catEclipses !== false;
+            if (DOM.prefCatMeteors) DOM.prefCatMeteors.checked = preferences.catMeteors !== false;
+            if (DOM.prefCatMoons) DOM.prefCatMoons.checked = preferences.catMoons !== false;
+        } else {
+            if (DOM.prefMasterAlerts) DOM.prefMasterAlerts.checked = false;
+            if (DOM.prefCatEclipses) DOM.prefCatEclipses.checked = true;
+            if (DOM.prefCatMeteors) DOM.prefCatMeteors.checked = true;
+            if (DOM.prefCatMoons) DOM.prefCatMoons.checked = true;
+        }
+        
+        // Restore collapsible timeline state
+        const timelineCollapsed = localStorage.getItem('lumina_timeline_collapsed') === 'true';
+        const section = document.querySelector('.timeline-section');
+        if (section && timelineCollapsed) {
+            section.classList.add('collapsed');
+        }
+    } catch (e) {
+        console.error('Error loading settings', e);
+    }
+}
+
+function checkAndTriggerNotifications() {
+    if (!('Notification' in window) || Notification.permission !== 'granted') return;
+    if (!DOM.prefMasterAlerts || !DOM.prefMasterAlerts.checked) return;
+    
+    const enabledCategories = {
+        eclipse: DOM.prefCatEclipses ? DOM.prefCatEclipses.checked : true,
+        meteor: DOM.prefCatMeteors ? DOM.prefCatMeteors.checked : true,
+        moon: DOM.prefCatMoons ? DOM.prefCatMoons.checked : true
+    };
+    
+    const events = [
+        ...getMoonPhasesAndSupermoons(state.today, 1),
+        ...getLunarEclipses(state.today, 1),
+        ...getLocalSolarEclipses(state.today, state.location.lat, state.location.lon, 1),
+        ...getMeteorShowers(state.today, 1)
+    ];
+    
+    const todayStr = state.today.toDateString();
+    const todayEvents = events.filter(evt => {
+        if (!enabledCategories[evt.category]) return false;
+        return evt.date.toDateString() === todayStr;
+    });
+    
+    if (todayEvents.length === 0) return;
+    
+    let notified = [];
+    try {
+        const stored = localStorage.getItem('lumina_notified_events');
+        if (stored) notified = JSON.parse(stored);
+    } catch (e) {}
+    
+    todayEvents.forEach(evt => {
+        if (notified.includes(evt.id)) return;
+        
+        const title = `Lumina Event Today!`;
+        const options = {
+            body: `${evt.name} occurs today at ${evt.date.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit', hour12: false })}.`,
+            icon: '/icons/icon-192.png'
+        };
+        new Notification(title, options);
+        
+        notified.push(evt.id);
+    });
+    
+    if (notified.length > 50) {
+        notified = notified.slice(notified.length - 50);
+    }
+    localStorage.setItem('lumina_notified_events', JSON.stringify(notified));
 }

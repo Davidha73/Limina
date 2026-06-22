@@ -723,6 +723,8 @@
 
         const sunDist = 180;
         const moonDist = 100;
+        const mx = focusX + Math.cos(moonAngle) * moonDist;
+        const my = focusY + Math.sin(moonAngle) * moonDist;
 
         // 3. Draw Horizon line
         ctx.beginPath();
@@ -767,6 +769,27 @@
         // 7. Draw Observer (stationary at zenith/top of Earth)
         const obsX = focusX;
         const obsY = focusY - 24;
+
+        // Draw Observer View Cone pointing towards the Moon
+        const dx = mx - obsX;
+        const dy = my - obsY;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        const lookAngle = Math.atan2(dy, dx);
+        const spread = Math.PI / 12; // 15 degrees spread on each side
+
+        // Linear gradient fading out halfway to the Moon
+        const coneGrad = ctx.createLinearGradient(obsX, obsY, obsX + dx * 0.5, obsY + dy * 0.5);
+        coneGrad.addColorStop(0, 'rgba(255, 68, 68, 0.45)');
+        coneGrad.addColorStop(1, 'rgba(255, 68, 68, 0)');
+
+        ctx.beginPath();
+        ctx.moveTo(obsX, obsY);
+        ctx.lineTo(obsX + Math.cos(lookAngle - spread) * dist, obsY + Math.sin(lookAngle - spread) * dist);
+        ctx.lineTo(obsX + Math.cos(lookAngle + spread) * dist, obsY + Math.sin(lookAngle + spread) * dist);
+        ctx.closePath();
+        ctx.fillStyle = coneGrad;
+        ctx.fill();
+
         ctx.beginPath();
         ctx.arc(obsX, obsY, 2, 0, 2 * Math.PI);
         ctx.fillStyle = '#ff4444';
@@ -792,8 +815,6 @@
         ctx.fillText('Sun', sx + 20, sy + 4);
 
         // 9. Draw Moon
-        const mx = focusX + Math.cos(moonAngle) * moonDist;
-        const my = focusY + Math.sin(moonAngle) * moonDist;
         ctx.beginPath();
         ctx.arc(mx, my, 8, 0, 2 * Math.PI);
         ctx.fillStyle = '#cccccc';
@@ -896,12 +917,6 @@
         ctx.textAlign   = 'center';
         ctx.fillText('Sun', cx, height - 15);
       }
-
-      ctx.fillStyle   = '#565f89';
-      ctx.font        = '400 11px Inter, sans-serif';
-      ctx.fillText('Click anywhere to return', cx, 36);
-      ctx.textAlign   = 'left';
-
 
       ctx.restore();
     }
