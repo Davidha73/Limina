@@ -1,5 +1,12 @@
 # Lumina Project Memory
 
+## [2026-06-22T22:02:00+01:00]
+**Status:** Recalibrated phone pitch sensor calculation for AR Camera mode to resolve the floor-pointing camera bug. Updated sensor elevation to map `beta - 90` when camera stream is running, allowing the phone to be tilted forward to face the sky while keeping standard `beta` mapping when camera is disabled.
+**Files Changed:**
+- [app.js](file:///c:/Users/david/OneDrive/Coding/Projects/Lumina/app.js)
+**Next Objectives:**
+- Verify alignment response accuracy of the updated pitch formula on device testing.
+
 ## [2026-06-22T21:56:00+01:00]
 **Status:** Implemented Option 4 (AR alignment guide). Added rear-camera video streams into the compass overlays for immersive overlay target scanning. Integrated manual camera toggles inside overlays, state persistence in `localStorage`, dynamic backdrop styling transitions, and interactive dashed-orange to solid-green alignment reticles.
 **Files Changed:**

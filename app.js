@@ -286,9 +286,18 @@ function setupEventListeners() {
         }
 
         // 2. Pitch/Tilt (altitude direction)
-        let tilt = e.beta !== null ? e.beta : 0;
-        // Keep tilt positive for front-facing screen tilts (0 to 90 deg)
-        tilt = Math.max(0, Math.min(90, tilt));
+        let tilt = 0;
+        const betaVal = e.beta !== null ? e.beta : 0;
+
+        if (state.compass.stream) {
+            // AR Camera Mode: Viewfinder style camera points out the back of the phone
+            // vertical phone (beta = 90) points at horizon (0), tilting forward (beta > 90) points up at sky
+            tilt = betaVal - 90;
+        } else {
+            // Standard Compass Mode: Guide is top edge of phone
+            // flat phone (beta = 0) points at horizon (0), tilting top up (beta > 0) points at sky
+            tilt = Math.max(0, Math.min(90, betaVal));
+        }
 
         if (heading === null) {
             if (activeElements.status) activeElements.status.textContent = "Waiting for compass alignment...";
@@ -337,12 +346,16 @@ function setupEventListeners() {
         }
 
         if (activeElements.currentBar) {
-            const tiltPct = (tilt / 90) * 100;
+            const tiltPct = state.compass.stream 
+                ? ((tilt + 90) / 180) * 100 
+                : (tilt / 90) * 100;
             activeElements.currentBar.style.width = `${tiltPct}%`;
         }
 
         if (activeElements.targetBand) {
-            const targetAltPct = (targetAlt / 90) * 100;
+            const targetAltPct = state.compass.stream 
+                ? ((targetAlt + 90) / 180) * 100 
+                : (targetAlt / 90) * 100;
             activeElements.targetBand.style.left = `${Math.max(0, targetAltPct - 5)}%`;
             activeElements.targetBand.style.width = '10%';
         }
