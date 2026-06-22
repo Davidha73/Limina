@@ -137,12 +137,19 @@ document.addEventListener('DOMContentLoaded', () => {
     // Dismiss Splash Screen after progress bar completes
     const splash = document.getElementById('splash-screen');
     if (splash) {
+        // Show splash screen after 500ms delay
+        setTimeout(() => {
+            splash.classList.add('splash-visible');
+        }, 500);
+
+        // Fade out and remove after loader animation finishes (2000ms total = 500ms delay + 1500ms anim duration)
         setTimeout(() => {
             splash.classList.add('splash-fade-out');
+            splash.classList.remove('splash-visible');
             splash.addEventListener('transitionend', () => {
                 splash.remove();
             });
-        }, 1500);
+        }, 2000);
     }
 });
 

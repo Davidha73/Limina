@@ -1,5 +1,13 @@
 # Lumina Project Memory
 
+## [2026-06-22T22:24:00+01:00]
+**Status:** Introduced a 500ms delay before the loading splash screen displays (fades in) to prevent flash-of-unstyled-content or brief visual flickers on fast cached loads. Configured CSS animation-delays on child components to match, and updated dismissal timer in JS to 2000ms.
+**Files Changed:**
+- [style.css](file:///c:/Users/david/OneDrive/Coding/Projects/Lumina/style.css)
+- [app.js](file:///c:/Users/david/OneDrive/Coding/Projects/Lumina/app.js)
+**Next Objectives:**
+- Test splash screen rendering behavior on both slow network throttling and fast desktop local reload.
+
 ## [2026-06-22T22:21:00+01:00]
 **Status:** Implemented a premium, animated loading splash screen with floating logo, pulsing radial brand gradient glow, letter-spaced title, and a smooth loader progress bar. Handles graceful transition fade out and DOM cleanup on initial rendering complete.
 **Files Changed:**
