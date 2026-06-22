@@ -49,15 +49,123 @@
 
   // ─── Planet Info (static facts + live distances rendered in focus view) ──────
   const PLANET_INFO = {
-    Sun:     { type: 'G2V Star',          period: '25.4 days (rot)',  moons: '8 Planets', tagline: 'Contains 99.86% of all mass in the Solar System and powers life on Earth' },
-    Mercury: { type: 'Terrestrial',  period: '88 Earth days',    moons: 0,   tagline: 'Days are longer than its years — it rotates just 3× per orbit' },
-    Venus:   { type: 'Terrestrial',  period: '225 Earth days',   moons: 0,   tagline: 'Surface hot enough to melt lead; spins backwards vs. most planets' },
-    Earth:   { type: 'Terrestrial',  period: '365.25 days',      moons: 1,   tagline: 'The only known world to harbour life — and you are on it right now' },
-    Mars:    { type: 'Terrestrial',  period: '687 Earth days',   moons: 2,   tagline: 'Home to Olympus Mons, the tallest volcano in the solar system' },
-    Jupiter: { type: 'Gas Giant',    period: '11.9 Earth years',  moons: 95,  tagline: 'The Great Red Spot is a storm that has raged for over 350 years' },
-    Saturn:  { type: 'Gas Giant',    period: '29.5 Earth years',  moons: 146, tagline: 'Its rings span 282,000 km yet are only about 1 km thick' },
-    Uranus:  { type: 'Ice Giant',    period: '84 Earth years',    moons: 28,  tagline: 'Rotates on its side with a 98° axial tilt — likely from a giant impact' },
-    Neptune: { type: 'Ice Giant',    period: '165 Earth years',   moons: 16,  tagline: 'Winds reach 2,100 km/h — the fastest recorded in the solar system' },
+    Sun: {
+      type: 'G2V Star',
+      period: '25.4 days (rot)',
+      moons: '8 Planets',
+      taglines: [
+        'Contains 99.86% of all mass in the Solar System and powers life on Earth',
+        'At its core, the Sun fuses about 600 million tons of hydrogen into helium every second',
+        'The Sun is about 4.6 billion years old and has consumed about half of its core hydrogen',
+        'One million Earths could fit inside the Sun if it were hollow',
+        'The Sun\'s gravity is 28 times stronger than Earth\'s gravity',
+        'The light from the Sun takes approximately 8 minutes and 20 seconds to reach Earth'
+      ]
+    },
+    Mercury: {
+      type: 'Terrestrial',
+      period: '88 Earth days',
+      moons: 0,
+      taglines: [
+        'Days are longer than its years — it rotates just 3× per orbit',
+        'It is the smallest planet in the Solar System, only slightly larger than Earth\'s Moon',
+        'Despite being closest to the Sun, it is not the hottest planet — Venus is',
+        'Temperatures on Mercury range from 430°C during the day to -180°C at night',
+        'It has no atmosphere, meaning its surface is heavily cratered from space debris',
+        'Mercury is the fastest orbiting planet, traveling at nearly 47 kilometers per second'
+      ]
+    },
+    Venus: {
+      type: 'Terrestrial',
+      period: '225 Earth days',
+      moons: 0,
+      taglines: [
+        'Surface hot enough to melt lead; spins backwards vs. most planets',
+        'Venus is the brightest natural object in Earth\'s night sky after the Moon',
+        'Its atmosphere is so thick that pressure on the surface is 90 times that of Earth',
+        'Venus is the hottest planet in the Solar System, reaching a constant 475°C',
+        'A day on Venus (one rotation) lasts longer than a year (one orbit around the Sun)',
+        'Venus is covered by active volcanoes and clouds of toxic sulfuric acid'
+      ]
+    },
+    Earth: {
+      type: 'Terrestrial',
+      period: '365.25 days',
+      moons: 1,
+      taglines: [
+        'The only known world to harbour life — and you are on it right now',
+        'Earth is the only planet in the Solar System not named after a mythological god or goddess',
+        'Liquid water covers about 71% of Earth\'s surface',
+        'Earth\'s atmosphere shields it from harmful solar radiation and meteoroids',
+        'Earth has a powerful magnetic field caused by the molten metal in its outer core',
+        'The Earth is not a perfect sphere; its rotation causes it to bulge at the equator'
+      ]
+    },
+    Mars: {
+      type: 'Terrestrial',
+      period: '687 Earth days',
+      moons: 2,
+      taglines: [
+        'Home to Olympus Mons, the tallest volcano in the solar system',
+        'Mars is red because its surface soil contains rust (iron oxide)',
+        'Features Valles Marineris, a canyon system 10 times longer than the Grand Canyon',
+        'Mars has two small, potato-shaped moons named Phobos and Deimos',
+        'Liquid water cannot exist on the surface of Mars due to its low atmospheric pressure',
+        'Mars experiences massive dust storms that can cover the entire planet for months'
+      ]
+    },
+    Jupiter: {
+      type: 'Gas Giant',
+      period: '11.9 Earth years',
+      moons: 95,
+      taglines: [
+        'The Great Red Spot is a storm that has raged for over 350 years',
+        'Jupiter is more than twice as massive as all the other planets combined',
+        'A day on Jupiter lasts only 10 hours, the fastest rotation of any planet',
+        'Jupiter has a magnetic field that is 14 times stronger than Earth\'s',
+        'Jupiter acts as a cosmic shield, using its gravity to deflect dangerous comets',
+        'It has 95 officially recognized moons, including Ganymede, the largest moon in the Solar System'
+      ]
+    },
+    Saturn: {
+      type: 'Gas Giant',
+      period: '29.5 Earth years',
+      moons: 146,
+      taglines: [
+        'Its rings span 282,000 km yet are only about 1 km thick',
+        'Saturn has the lowest density of all planets; it could float in water',
+        'Its moon Titan is the only moon in the solar system with a dense atmosphere and liquid lakes',
+        'Saturn\'s rings are mostly made of billions of individual particles of water ice and rock',
+        'Saturn has 146 moons, the most of any planet in the Solar System',
+        'Winds in Saturn\'s upper atmosphere are extremely fast, reaching 1,800 km/h'
+      ]
+    },
+    Uranus: {
+      type: 'Ice Giant',
+      period: '84 Earth years',
+      moons: 28,
+      taglines: [
+        'Rotates on its side with a 98° axial tilt — likely from a giant impact',
+        'It was the first planet discovered with a telescope (by William Herschel in 1781)',
+        'Uranus has 13 known rings, which are very dark and narrow',
+        'Uranus is the coldest planet in the Solar System, with temperatures reaching -224°C',
+        'Its blue-green color is caused by methane gas absorbing red light in its atmosphere',
+        'Most of Uranus\'s mass is a hot, dense fluid of water, ammonia, and methane ice'
+      ]
+    },
+    Neptune: {
+      type: 'Ice Giant',
+      period: '165 Earth years',
+      moons: 16,
+      taglines: [
+        'Winds reach 2,100 km/h — the fastest recorded in the solar system',
+        'It was the first planet located through mathematical calculations rather than telescope search',
+        'Neptune is 30 times farther from the Sun than Earth',
+        'Neptune\'s moon Triton orbits the planet in the opposite direction of the planet\'s rotation',
+        'It has 16 known moons and a faint, clumpy ring system',
+        'Neptune is an ice giant, composed of a thick soup of water, ammonia, and methane'
+      ]
+    }
   };
 
   // ─── State ─────────────────────────────────────────────────────────────────
@@ -66,6 +174,21 @@
   let viewMode     = 'system';
   let modeProgress = 0;
   const planetPositions = {};
+  const planetFactIndices = {};
+
+  function cyclePlanetFact(planetName) {
+    const info = PLANET_INFO[planetName];
+    if (!info || !info.taglines) return;
+    if (planetFactIndices[planetName] === undefined) {
+      planetFactIndices[planetName] = Math.floor(Math.random() * info.taglines.length);
+    } else {
+      planetFactIndices[planetName] = (planetFactIndices[planetName] + 1) % info.taglines.length;
+    }
+    const taglineEl = document.getElementById('info-tagline');
+    if (taglineEl && viewMode === planetName) {
+      taglineEl.textContent = info.taglines[planetFactIndices[planetName]];
+    }
+  }
 
   // ─── DOM References ────────────────────────────────────────────────────────
   const canvas    = document.getElementById('orrery-canvas');
@@ -160,6 +283,7 @@
       const dySun = clickY - cy;
       if (Math.sqrt(dxSun * dxSun + dySun * dySun) < 25) {
         viewMode = 'Sun';
+        cyclePlanetFact('Sun');
         return;
       }
 
@@ -170,12 +294,23 @@
           const dy = clickY - pos.y;
           if (Math.sqrt(dx * dx + dy * dy) < 40) {
             viewMode = planet.name;
+            cyclePlanetFact(planet.name);
             return;
           }
         }
       }
     } else {
-      viewMode = 'system';
+      const cx = rect.width / 2;
+      const cy = rect.height / 2;
+      const fx = cx;
+      const fy = cy - 60;
+      const dx = clickX - fx;
+      const dy = clickY - fy;
+      if (Math.sqrt(dx * dx + dy * dy) < 40) {
+        cyclePlanetFact(viewMode);
+      } else {
+        viewMode = 'system';
+      }
     }
   });
 
@@ -485,9 +620,9 @@
       const focusX = cx;
       const focusY = cy - 60;
 
-      // Large Sun at bottom (only drawn if not focusing the Sun itself)
+      // Large Sun at bottom (only drawn if not focusing the Sun or Earth itself)
       let rot = 0;
-      if (activePlanetDef.name !== 'Sun') {
+      if (activePlanetDef.name !== 'Sun' && activePlanetDef.name !== 'Earth') {
         const sunRadius = 400;
         ctx.beginPath();
         ctx.arc(cx, height + sunRadius - 40, sunRadius, 0, 2 * Math.PI);
@@ -510,7 +645,7 @@
         ctx.shadowColor = 'rgba(251, 191, 36, 0.8)';
         ctx.fill();
         ctx.shadowBlur = 0;
-      } else {
+      } else if (activePlanetDef.name !== 'Earth') {
         ctx.beginPath();
         ctx.arc(focusX, focusY, 24, 0, 2 * Math.PI);
         ctx.fillStyle = activePlanetDef.color;
@@ -567,69 +702,129 @@
         }
       } else if (activePlanetDef.name === 'Earth') {
         const { lat, lon } = getLocation();
-        const moonGeo   = GeoVector(Body.Moon, astroTime, true);
-        const moonEcl   = Ecliptic(moonGeo).vec;
-        const moonAngle = Math.atan2(moonEcl.y, moonEcl.x);
-        const moonDist  = Math.min(cx * 0.8, 160);
-        const mAligned  = moonAngle + rot;
-        const mx        = focusX + Math.cos(mAligned) * moonDist;
-        const my        = focusY + Math.sin(mAligned) * moonDist;
 
+        // 1. Calculate local solar time to find Sun's screen angle
+        const utcH = now.getUTCHours() + now.getUTCMinutes() / 60 + now.getUTCSeconds() / 3600;
+        let localSolar = (utcH + lon / 15) % 24;
+        if (localSolar < 0) localSolar += 24;
+
+        // Sun Angle on screen (Noon is -90deg, Sunset is 0deg, Midnight is 90deg, Sunrise is 180deg)
+        const sunAngle = (localSolar - 12) * Math.PI / 12 - Math.PI / 2;
+
+        // 2. Calculate Moon's space angle relative to Sun in geocentric coordinates
+        const sunGeo = GeoVector(Body.Sun, astroTime, true);
+        const moonGeo = GeoVector(Body.Moon, astroTime, true);
+        const sunAngleSpace = Math.atan2(sunGeo.y, sunGeo.x);
+        const moonAngleSpace = Math.atan2(moonGeo.y, moonGeo.x);
+        const angleDiff = moonAngleSpace - sunAngleSpace;
+
+        // Moon Angle on screen
+        const moonAngle = sunAngle - angleDiff;
+
+        const sunDist = 180;
+        const moonDist = 100;
+
+        // 3. Draw Horizon line
         ctx.beginPath();
-        ctx.arc(focusX, focusY, moonDist, 0, 2 * Math.PI);
-        ctx.strokeStyle = 'rgba(255, 255, 255, 0.1)';
+        ctx.moveTo(focusX - 160, focusY);
+        ctx.lineTo(focusX + 160, focusY);
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.15)';
+        ctx.lineWidth = 1;
         ctx.stroke();
 
-        // Observer dot
-        const utcH       = now.getUTCHours() + now.getUTCMinutes() / 60 + now.getUTCSeconds() / 3600;
-        let localSolar   = (utcH + lon / 15) % 24;
-        if (localSolar < 0) localSolar += 24;
-        const obsAngle   = -(localSolar - 12) * Math.PI / 12 + Math.PI / 2;
-        const obsDist    = 24 * Math.cos(lat * Math.PI / 180);
-        const obsX       = focusX + Math.cos(obsAngle) * obsDist;
-        const obsY       = focusY + Math.sin(obsAngle) * obsDist;
+        // 4. Draw Sun Orbit path (dashed)
+        ctx.save();
+        ctx.beginPath();
+        ctx.arc(focusX, focusY, sunDist, 0, 2 * Math.PI);
+        ctx.strokeStyle = 'rgba(251, 191, 36, 0.08)';
+        ctx.setLineDash([4, 4]);
+        ctx.stroke();
+        ctx.restore();
 
+        // 5. Draw Moon Orbit path
+        ctx.beginPath();
+        ctx.arc(focusX, focusY, moonDist, 0, 2 * Math.PI);
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.05)';
+        ctx.stroke();
+
+        // 6. Draw Earth
+        ctx.beginPath();
+        ctx.arc(focusX, focusY, 24, 0, 2 * Math.PI);
+        ctx.fillStyle = activePlanetDef.color;
+        ctx.fill();
+
+        // Earth Shadow (facing away from the Sun)
+        ctx.beginPath();
+        ctx.arc(focusX, focusY, 24, sunAngle + Math.PI / 2, sunAngle - Math.PI / 2);
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.6)';
+        ctx.fill();
+
+        ctx.beginPath();
+        ctx.arc(focusX, focusY, 24, 0, 2 * Math.PI);
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.15)';
+        ctx.stroke();
+
+        // 7. Draw Observer (stationary at zenith/top of Earth)
+        const obsX = focusX;
+        const obsY = focusY - 24;
         ctx.beginPath();
         ctx.arc(obsX, obsY, 2, 0, 2 * Math.PI);
         ctx.fillStyle = '#ff4444';
         ctx.fill();
-
         ctx.beginPath();
         ctx.arc(obsX, obsY, 4, 0, 2 * Math.PI);
         ctx.strokeStyle = 'rgba(255, 68, 68, 0.5)';
         ctx.stroke();
 
+        // 8. Draw Sun
+        const sx = focusX + Math.cos(sunAngle) * sunDist;
+        const sy = focusY + Math.sin(sunAngle) * sunDist;
+        ctx.beginPath();
+        ctx.arc(sx, sy, 14, 0, 2 * Math.PI);
+        ctx.fillStyle = '#fbbf24';
+        ctx.shadowBlur = 30;
+        ctx.shadowColor = 'rgba(251, 191, 36, 0.6)';
+        ctx.fill();
+        ctx.shadowBlur = 0;
+
+        ctx.fillStyle = '#f0f3fa';
+        ctx.font = '600 11px Outfit, sans-serif';
+        ctx.fillText('Sun', sx + 20, sy + 4);
+
+        // 9. Draw Moon
+        const mx = focusX + Math.cos(moonAngle) * moonDist;
+        const my = focusY + Math.sin(moonAngle) * moonDist;
         ctx.beginPath();
         ctx.arc(mx, my, 8, 0, 2 * Math.PI);
         ctx.fillStyle = '#cccccc';
         ctx.fill();
 
+        // Moon Shadow (facing away from the Sun)
         ctx.beginPath();
-        ctx.arc(mx, my, 8, Math.PI, 0);
+        ctx.arc(mx, my, 8, sunAngle + Math.PI / 2, sunAngle - Math.PI / 2);
         ctx.fillStyle = 'rgba(0, 0, 0, 0.85)';
         ctx.fill();
 
         ctx.beginPath();
         ctx.arc(mx, my, 8, 0, 2 * Math.PI);
-        ctx.strokeStyle = 'rgba(255, 255, 255, 0.1)';
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.15)';
         ctx.stroke();
 
+        // Labels
         ctx.fillStyle = '#f0f3fa';
         ctx.font      = '600 11px Outfit, sans-serif';
-        ctx.fillText('Moon', mx + 16, my + 4);
+        ctx.fillText('Moon', mx + 14, my - 2);
 
         const moonIllum = Illumination(Body.Moon, astroTime);
         ctx.fillStyle   = '#9aa5ce';
         ctx.font        = '400 10px Inter, sans-serif';
-        ctx.fillText(`Illum: ${(moonIllum.phase_fraction * 100).toFixed(1)}%`, mx + 16, my + 16);
-
+        ctx.fillText(`${(moonIllum.phase_fraction * 100).toFixed(0)}% Illum`, mx + 14, my + 8);
 
         const obs    = new Observer(lat, lon, 0);
         const moonEq = Equator(Body.Moon, astroTime, obs, true, true);
         const moonHz = Horizon(astroTime, obs, moonEq.ra, moonEq.dec, 'normal');
-        ctx.fillText(`Local Alt: ${moonHz.altitude.toFixed(1)}°`, mx + 16, my + 28);
-        ctx.fillText(`Local Az:  ${moonHz.azimuth.toFixed(1)}°`,  mx + 16, my + 40);
-
+        ctx.fillText(`Alt: ${moonHz.altitude.toFixed(0)}°`, mx + 14, my + 18);
+        ctx.fillText(`Az:  ${moonHz.azimuth.toFixed(0)}°`,  mx + 14, my + 28);
       } else if (activePlanetDef.name === 'Jupiter') {
         const jMoons = JupiterMoons(astroTime);
         const galilean = [
@@ -695,7 +890,7 @@
         }
       }
 
-      if (activePlanetDef.name !== 'Sun') {
+      if (activePlanetDef.name !== 'Sun' && activePlanetDef.name !== 'Earth') {
         ctx.fillStyle   = '#f6d365';
         ctx.font        = '600 13px Outfit, sans-serif';
         ctx.textAlign   = 'center';
@@ -726,7 +921,11 @@
           infoType.textContent = info.type;
           infoPeriod.textContent = info.period;
           infoMoons.textContent = info.moons;
-          infoTagline.textContent = info.tagline;
+          
+          if (planetFactIndices[activePlanetDef.name] === undefined) {
+            planetFactIndices[activePlanetDef.name] = Math.floor(Math.random() * info.taglines.length);
+          }
+          infoTagline.textContent = info.taglines[planetFactIndices[activePlanetDef.name]];
         }
 
         let sunDistAU = 0;

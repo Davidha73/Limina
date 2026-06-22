@@ -23,7 +23,15 @@ const state = {
     calendarMonth: new Date(),
     
     // Timer for slider auto-reset warning
-    sliderTimeout: null
+    sliderTimeout: null,
+
+    // Compass Tracker
+    compass: {
+        active: false,
+        targetAz: 0,
+        targetAlt: 0,
+        hasVibrated: false
+    }
 };
 
 // Instantiate Moon Renderer
@@ -203,6 +211,169 @@ function setupEventListeners() {
         state.calendarMonth = new Date(state.today);
         renderCalendar();
     });
+
+    // Card explanations click toggle (accordion effect)
+    const toggleCard = (e) => {
+        const card = e.target.closest('.detail-card, .stat-card');
+        if (card) {
+            const allCards = document.querySelectorAll('.detail-card, .stat-card');
+            allCards.forEach(c => {
+                if (c !== card) c.classList.remove('expanded');
+            });
+            card.classList.toggle('expanded');
+        }
+    };
+    
+    const detailsPanel = document.querySelector('.details-panel');
+    if (detailsPanel) detailsPanel.addEventListener('click', toggleCard);
+    
+    const solarRow = document.querySelector('.solar-dashboard-row');
+    if (solarRow) solarRow.addEventListener('click', toggleCard);
+
+    // Compass Locator Overlay functionality
+    const compassOverlay = document.getElementById('compass-overlay');
+    const findSkyBtn = document.getElementById('find-sky-btn');
+    const closeCompassBtn = document.getElementById('close-compass-btn');
+    const compassDial = document.getElementById('compass-dial');
+    const moonTargetAnchor = document.getElementById('moon-target-anchor');
+    const currentTiltEl = document.getElementById('current-tilt');
+    const targetAltitudeEl = document.getElementById('target-altitude');
+    const altitudeCurrentBar = document.getElementById('altitude-current-bar');
+    const altitudeTargetBand = document.getElementById('altitude-target-band');
+    const compassStatus = document.getElementById('compass-status');
+
+    let orientationHandlerBound = false;
+
+    function handleOrientation(e) {
+        if (!state.compass.active) return;
+
+        // 1. Heading (compass direction)
+        let heading = null;
+        if (e.webkitCompassHeading !== undefined) {
+            heading = e.webkitCompassHeading;
+        } else if (e.alpha !== null) {
+            heading = 360 - e.alpha;
+        }
+
+        // 2. Pitch/Tilt (altitude direction)
+        let tilt = e.beta !== null ? e.beta : 0;
+        // Keep tilt positive for front-facing screen tilts (0 to 90 deg)
+        tilt = Math.max(0, Math.min(90, tilt));
+
+        if (heading === null) {
+            compassStatus.textContent = "Waiting for compass alignment...";
+            return;
+        }
+
+        // 3. Update Compass Dial Rotation
+        // Rotate the dial by -heading so N always points North
+        compassDial.style.transform = `rotate(${-heading}deg)`;
+
+        // 4. Update Target Moon Angle on the dial
+        moonTargetAnchor.style.transform = `rotate(${state.compass.targetAz}deg)`;
+
+        // 5. Update Altitude Gauge
+        currentTiltEl.textContent = `${Math.round(tilt)}°`;
+        targetAltitudeEl.textContent = `${Math.round(state.compass.targetAlt)}°`;
+
+        const tiltPct = (tilt / 90) * 100;
+        altitudeCurrentBar.style.width = `${tiltPct}%`;
+
+        const targetAltPct = (state.compass.targetAlt / 90) * 100;
+        altitudeTargetBand.style.left = `${Math.max(0, targetAltPct - 5)}%`;
+        altitudeTargetBand.style.width = '10%';
+
+        // 6. Calculate directional differences
+        let diffAz = state.compass.targetAz - heading;
+        while (diffAz > 180) diffAz -= 360;
+        while (diffAz < -180) diffAz += 360;
+
+        const diffAlt = state.compass.targetAlt - tilt;
+
+        // 7. Render status instructions
+        if (Math.abs(diffAz) < 6) {
+            // Azimuth is aligned! Now align altitude
+            if (Math.abs(diffAlt) < 6) {
+                compassStatus.textContent = "Aligned! Look Up!";
+                compassStatus.className = "compass-status aligned";
+                if (!state.compass.hasVibrated) {
+                    if (navigator.vibrate) navigator.vibrate(120);
+                    state.compass.hasVibrated = true;
+                }
+            } else {
+                compassStatus.textContent = diffAlt > 0 ? "Tilt Phone Up ⬆️" : "Tilt Phone Down ⬇️";
+                compassStatus.className = "compass-status";
+                state.compass.hasVibrated = false;
+            }
+        } else {
+            // Guide azimuth alignment
+            compassStatus.textContent = diffAz > 0 ? "Turn Right ➡️" : "Turn Left ⬅️";
+            compassStatus.className = "compass-status";
+            state.compass.hasVibrated = false;
+        }
+    }
+
+    function startCompass() {
+        state.compass.active = true;
+        state.compass.hasVibrated = false;
+        compassOverlay.classList.remove('hidden');
+        document.body.style.overflow = 'hidden'; // prevent scrolling behind
+
+        // Initialize target labels
+        targetAltitudeEl.textContent = `${Math.round(state.compass.targetAlt)}°`;
+
+        if (window.DeviceOrientationEvent && typeof window.DeviceOrientationEvent.requestPermission === 'function') {
+            // iOS Safari requires permission
+            window.DeviceOrientationEvent.requestPermission()
+                .then(response => {
+                    if (response === 'granted') {
+                        activateCompassListeners();
+                    } else {
+                        compassStatus.textContent = "Permission denied. Enable motion sensors.";
+                    }
+                })
+                .catch(err => {
+                    console.error("iOS permission error", err);
+                    compassStatus.textContent = "Error initializing sensors.";
+                });
+        } else {
+            // Android/Standard browsers
+            activateCompassListeners();
+        }
+    }
+
+    function activateCompassListeners() {
+        if (!orientationHandlerBound) {
+            // Use deviceorientationabsolute if available (essential for Android absolute North)
+            if ('ondeviceorientationabsolute' in window) {
+                window.addEventListener('deviceorientationabsolute', handleOrientation, true);
+            } else {
+                window.addEventListener('deviceorientation', handleOrientation, true);
+            }
+            orientationHandlerBound = true;
+        }
+    }
+
+    function stopCompass() {
+        state.compass.active = false;
+        compassOverlay.classList.add('hidden');
+        document.body.style.overflow = ''; // restore scrolling
+
+        if (orientationHandlerBound) {
+            window.removeEventListener('deviceorientationabsolute', handleOrientation, true);
+            window.removeEventListener('deviceorientation', handleOrientation, true);
+            orientationHandlerBound = false;
+        }
+    }
+
+    if (findSkyBtn) findSkyBtn.addEventListener('click', startCompass);
+    if (closeCompassBtn) closeCompassBtn.addEventListener('click', stopCompass);
+    if (compassOverlay) {
+        // Also close if clicking outside modal
+        compassOverlay.addEventListener('click', (e) => {
+            if (e.target === compassOverlay) stopCompass();
+        });
+    }
 }
 
 // ==========================================================================
@@ -405,19 +576,29 @@ function updateAstroCalculations() {
     const lat = state.location.lat;
     const lon = state.location.lon;
     
-    // Moon Illumination
+    // Moon Illumination (remains SunCalc for visual compatibility with renderer)
     const illum = SunCalc.getMoonIllumination(date);
     const phase = illum.phase; // 0.0 to 1.0
     const fraction = illum.fraction; // 0.0 to 1.0
-    
-    // Moon position
-    const pos = SunCalc.getMoonPosition(date, lat, lon);
-    const altitude = pos.altitude * 180 / Math.PI; // degrees
-    const azimuth = ((pos.azimuth * 180 / Math.PI + 180) % 360); // standard compass bearing
-    const distance = pos.distance; // km
-    const parallacticAngle = pos.parallacticAngle; // radians
     const angle = illum.angle; // radians
+    const parallacticAngle = SunCalc.getMoonPosition(date, lat, lon).parallacticAngle; // needed for skyView orientation rotation
     
+    // Moon position and distance using high-precision Astronomy Engine
+    const Astronomy = window.Astronomy;
+    const obs = new Astronomy.Observer(lat, lon, 0);
+    const astroTime = new Astronomy.AstroTime(date);
+    
+    const moonEq = Astronomy.Equator(Astronomy.Body.Moon, astroTime, obs, true, true);
+    const moonHz = Astronomy.Horizon(astroTime, obs, moonEq.ra, moonEq.dec, 'normal');
+    const moonGeo = Astronomy.GeoVector(Astronomy.Body.Moon, astroTime, true);
+    
+    const altitude = moonHz.altitude; // degrees
+    const azimuth = moonHz.azimuth; // degrees (compass bearing 0-360)
+    const distance = Math.sqrt(moonGeo.x ** 2 + moonGeo.y ** 2 + moonGeo.z ** 2) * 149597870.7; // AU to km
+    
+    state.compass.targetAz = azimuth;
+    state.compass.targetAlt = altitude;
+
     // Update active render options
     state.activeMoonOptions = {
         skyView: state.skyView,
@@ -431,10 +612,12 @@ function updateAstroCalculations() {
     // Moon rise/set
     const times = SunCalc.getMoonTimes(date, lat, lon);
     
-    // Sun position
-    const sunPos = SunCalc.getPosition(date, lat, lon);
-    const sunAltitude = sunPos.altitude * 180 / Math.PI;
-    const sunAzimuth = ((sunPos.azimuth * 180 / Math.PI + 180) % 360);
+    // Sun position using Astronomy Engine
+    const sunEq = Astronomy.Equator(Astronomy.Body.Sun, astroTime, obs, true, true);
+    const sunHz = Astronomy.Horizon(astroTime, obs, sunEq.ra, sunEq.dec, 'normal');
+    
+    const sunAltitude = sunHz.altitude;
+    const sunAzimuth = sunHz.azimuth;
     
     // Sun times
     const sunTimes = SunCalc.getTimes(date, lat, lon);

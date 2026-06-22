@@ -1675,3 +1675,298 @@ body {
   --planet-color-bg: rgba(251, 191, 36, 0.12);
   --planet-color-border: rgba(251, 191, 36, 0.25);
 }
+
+/* Card click-to-explain styling */
+.detail-card,
+.stat-card {
+  cursor: pointer;
+  position: relative;
+  transition: background-color 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease;
+}
+
+.detail-card::after,
+.stat-card::after {
+  content: '\f05a'; /* FontAwesome circle-info icon */
+  font-family: 'Font Awesome 6 Free';
+  font-weight: 900;
+  position: absolute;
+  top: 0.6rem;
+  right: 0.6rem;
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  opacity: 0.35;
+  transition: opacity 0.2s ease, color 0.2s ease;
+}
+
+.detail-card:hover::after,
+.stat-card:hover::after {
+  opacity: 0.8;
+  color: var(--accent-cyan);
+}
+
+.detail-card.expanded::after,
+.stat-card.expanded::after {
+  content: '\f057'; /* FontAwesome circle-xmark icon when expanded */
+  color: var(--text-muted);
+  opacity: 0.6;
+}
+
+.card-explanation {
+  max-height: 0;
+  opacity: 0;
+  overflow: hidden;
+  font-size: 0.76rem;
+  color: var(--text-secondary);
+  line-height: 1.42;
+  transition: max-height 0.35s cubic-bezier(0.25, 0.8, 0.25, 1), opacity 0.3s ease, margin-top 0.3s ease;
+  margin-top: 0;
+  width: 100%;
+}
+
+.detail-card.expanded .card-explanation,
+.stat-card.expanded .card-explanation {
+  max-height: 120px;
+  opacity: 1;
+  margin-top: 0.65rem;
+  padding-top: 0.45rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.detail-card.expanded,
+.stat-card.expanded {
+  background-color: var(--card-bg-hover) !important;
+  border-color: rgba(255, 255, 255, 0.14) !important;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25) !important;
+}
+
+.detail-info {
+  display: flex;
+  flex-direction: column;
+}
+
+/* Locate Moon Compass Modal Overlay */
+.compass-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(3, 4, 9, 0.85);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  z-index: 2000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+}
+
+.compass-modal {
+  position: relative;
+  width: 100%;
+  max-width: 400px;
+  background: rgba(12, 14, 38, 0.95);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: var(--radius-lg);
+  padding: 2rem 1.5rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.25rem;
+  text-align: center;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.8);
+}
+
+.close-compass-btn {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  background: transparent;
+  border: none;
+  color: var(--text-secondary);
+  font-size: 1.2rem;
+  cursor: pointer;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: var(--transition);
+}
+
+.close-compass-btn:hover {
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--text-primary);
+}
+
+.compass-modal h3 {
+  font-family: var(--font-heading);
+  font-size: 1.35rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.compass-desc {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  line-height: 1.4;
+  margin: 0;
+}
+
+.compass-ring-container {
+  position: relative;
+  width: 180px;
+  height: 180px;
+  margin: 0.5rem 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.compass-dial {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  border: 2px dashed rgba(255, 255, 255, 0.15);
+  transition: transform 0.1s linear;
+}
+
+.direction {
+  position: absolute;
+  font-family: var(--font-heading);
+  font-weight: 700;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+.direction.north { top: 6px; left: 50%; transform: translateX(-50%); color: #ff4444; }
+.direction.east  { right: 8px; top: 50%; transform: translateY(-50%); }
+.direction.south { bottom: 6px; left: 50%; transform: translateX(-50%); }
+.direction.west  { left: 8px; top: 50%; transform: translateY(-50%); }
+
+.moon-target-anchor {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  transition: transform 0.3s ease;
+}
+
+.moon-target-indicator {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 24px;
+  height: 24px;
+  background: var(--accent-cyan);
+  border-radius: 50%;
+  color: #030409;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75rem;
+  box-shadow: 0 0 12px var(--accent-cyan);
+  transform: translate(-50%, -50%) translate(0, -74px);
+  transform-origin: 50% 50%;
+}
+
+.phone-pointer {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 1.8rem;
+  color: #ffffff;
+  animation: bouncePointer 1.5s infinite ease-in-out;
+  z-index: 10;
+}
+
+@keyframes bouncePointer {
+  0%, 100% { transform: translate(-50%, -55%); }
+  50% { transform: translate(-50%, -45%); }
+}
+
+.altitude-gauge-container {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.altitude-gauge-track {
+  position: relative;
+  width: 100%;
+  height: 10px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 5px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.altitude-target-band {
+  position: absolute;
+  top: 0;
+  height: 100%;
+  background: rgba(0, 242, 254, 0.15);
+  border-left: 1px solid var(--accent-cyan);
+  border-right: 1px solid var(--accent-cyan);
+}
+
+.altitude-current-bar {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  width: 0;
+  background: linear-gradient(to right, var(--accent-blue), var(--accent-cyan));
+  border-radius: 5px;
+}
+
+.altitude-label {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+}
+
+.compass-status {
+  font-family: var(--font-heading);
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  min-height: 1.5rem;
+}
+
+.compass-status.aligned {
+  color: #10b981;
+  text-shadow: 0 0 10px rgba(16, 185, 129, 0.4);
+}
+
+.find-sky-btn {
+  background: linear-gradient(135deg, var(--accent-blue), var(--accent-cyan));
+  border: none;
+  border-radius: var(--radius-sm);
+  color: #030409;
+  font-family: var(--font-heading);
+  font-weight: 600;
+  font-size: 0.8rem;
+  padding: 0.4rem 0.8rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  margin-top: 0.5rem;
+  box-shadow: 0 4px 12px rgba(0, 242, 254, 0.2);
+  transition: var(--transition);
+}
+
+.find-sky-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgba(0, 242, 254, 0.3);
+}
+
+.find-sky-btn:active {
+  transform: translateY(1px);
+}

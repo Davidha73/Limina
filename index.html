@@ -175,6 +175,7 @@
                       ></div>
                     </div>
                   </div>
+                  <div class="card-explanation">The fraction of the Moon's surface lit by the Sun from our perspective. Waxing phases are growing; waning phases are shrinking.</div>
                 </div>
               </div>
 
@@ -194,6 +195,7 @@
                       style="width: 35.2%"
                     ></div>
                   </div>
+                  <div class="card-explanation">The number of days that have passed since the last New Moon. A complete cycle takes 29.53 days.</div>
                 </div>
               </div>
 
@@ -207,6 +209,7 @@
                   <div class="stat-content">
                     <span class="stat-label">Moonrise</span>
                     <span id="rise-time" class="stat-val">18:42</span>
+                    <div class="card-explanation">The local time when the Moon rises above the horizon in the East. This shifts about 50 minutes later each day.</div>
                   </div>
                 </div>
                 <!-- Set Time -->
@@ -217,6 +220,7 @@
                   <div class="stat-content">
                     <span class="stat-label">Moonset</span>
                     <span id="set-time" class="stat-val">05:12</span>
+                    <div class="card-explanation">The local time when the Moon sinks below the horizon in the West.</div>
                   </div>
                 </div>
                 <!-- Altitude -->
@@ -227,6 +231,7 @@
                   <div class="stat-content">
                     <span class="stat-label">Altitude</span>
                     <span id="altitude-val" class="stat-val">32.4°</span>
+                    <div class="card-explanation">The angular height of the Moon above the horizon. 90° is directly overhead, and negative means it is below the horizon.</div>
                   </div>
                 </div>
                 <!-- Azimuth -->
@@ -237,6 +242,10 @@
                   <div class="stat-content">
                     <span class="stat-label">Azimuth</span>
                     <span id="azimuth-val" class="stat-val">120° ESE</span>
+                    <button id="find-sky-btn" class="find-sky-btn">
+                      <i class="fa-solid fa-location-arrow"></i> Find in Sky
+                    </button>
+                    <div class="card-explanation">The compass heading of the Moon, starting from North (0°) and moving clockwise (E: 90°, S: 180°, W: 270°).</div>
                   </div>
                 </div>
                 <!-- Distance -->
@@ -250,6 +259,7 @@
                     <span id="distance-sub" class="stat-sub"
                       >Average distance</span
                     >
+                    <div class="card-explanation">The physical distance to the Moon. It varies between Perigee (closest) and Apogee (farthest) due to its elliptical orbit.</div>
                   </div>
                 </div>
               </div>
@@ -281,6 +291,7 @@
                     style="width: 80%"
                   ></div>
                 </div>
+                <div class="card-explanation">The total hours of daylight today, calculated from sunrise to sunset. This varies throughout the year based on Earth's axial tilt.</div>
               </div>
             </div>
 
@@ -294,6 +305,7 @@
                 <div class="stat-content">
                   <span class="stat-label">Sunrise</span>
                   <span id="sunrise-time" class="stat-val">04:42</span>
+                  <div class="card-explanation">The local time when the upper edge of the Sun appears on the Eastern horizon.</div>
                 </div>
               </div>
               <!-- Sunset -->
@@ -304,6 +316,7 @@
                 <div class="stat-content">
                   <span class="stat-label">Sunset</span>
                   <span id="sunset-time" class="stat-val">21:12</span>
+                  <div class="card-explanation">The local time when the upper edge of the Sun disappears below the Western horizon.</div>
                 </div>
               </div>
               <!-- Sun Altitude -->
@@ -314,6 +327,7 @@
                 <div class="stat-content">
                   <span class="stat-label">Sun Altitude</span>
                   <span id="sun-altitude-val" class="stat-val">12.4°</span>
+                  <div class="card-explanation">The angular height of the Sun above the horizon. Negative values represent astronomical night/twilight.</div>
                 </div>
               </div>
               <!-- Sun Azimuth -->
@@ -324,6 +338,7 @@
                 <div class="stat-content">
                   <span class="stat-label">Sun Azimuth</span>
                   <span id="sun-azimuth-val" class="stat-val">290° WNW</span>
+                  <div class="card-explanation">The compass direction of the Sun, moving clockwise from North (0°).</div>
                 </div>
               </div>
             </div>
@@ -527,6 +542,44 @@
         <span class="nav-dock-label">Solar System</span>
       </button>
     </nav>
+
+    <!-- Locate Moon Compass Overlay -->
+    <div id="compass-overlay" class="compass-overlay hidden">
+      <div class="compass-modal glass-card">
+        <button id="close-compass-btn" class="close-compass-btn">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+        <h3>Locate the Moon</h3>
+        <p class="compass-desc">Hold your phone flat for the compass, then tilt it up to match the altitude.</p>
+        
+        <div class="compass-ring-container">
+          <div class="compass-dial" id="compass-dial">
+            <div class="direction north">N</div>
+            <div class="direction east">E</div>
+            <div class="direction south">S</div>
+            <div class="direction west">W</div>
+            <div class="moon-target-anchor" id="moon-target-anchor">
+              <div class="moon-target-indicator">
+                <i class="fa-solid fa-moon"></i>
+              </div>
+            </div>
+          </div>
+          <div class="phone-pointer">
+            <i class="fa-solid fa-arrow-up"></i>
+          </div>
+        </div>
+
+        <div class="altitude-gauge-container">
+          <div class="altitude-gauge-track">
+            <div class="altitude-target-band" id="altitude-target-band"></div>
+            <div class="altitude-current-bar" id="altitude-current-bar"></div>
+          </div>
+          <div class="altitude-label">Tilt Phone: <span id="current-tilt">0°</span> / Target: <span id="target-altitude">0°</span></div>
+        </div>
+
+        <div class="compass-status" id="compass-status">Point phone as shown...</div>
+      </div>
+    </div>
 
     <!-- Scripts -->
     <!-- Load SunCalc ESM via standard module loader or import map. For simplicity, we import it directly in app.js -->
