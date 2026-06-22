@@ -133,6 +133,17 @@ document.addEventListener('DOMContentLoaded', () => {
     window.addEventListener('moonTextureLoaded', () => {
         renderActiveMoon();
     });
+
+    // Dismiss Splash Screen after progress bar completes
+    const splash = document.getElementById('splash-screen');
+    if (splash) {
+        setTimeout(() => {
+            splash.classList.add('splash-fade-out');
+            splash.addEventListener('transitionend', () => {
+                splash.remove();
+            });
+        }, 1500);
+    }
 });
 
 function setupEventListeners() {

@@ -1,5 +1,21 @@
 # Lumina Project Memory
 
+## [2026-06-22T22:21:00+01:00]
+**Status:** Implemented a premium, animated loading splash screen with floating logo, pulsing radial brand gradient glow, letter-spaced title, and a smooth loader progress bar. Handles graceful transition fade out and DOM cleanup on initial rendering complete.
+**Files Changed:**
+- [index.html](file:///c:/Users/david/OneDrive/Coding/Projects/Lumina/index.html)
+- [style.css](file:///c:/Users/david/OneDrive/Coding/Projects/Lumina/style.css)
+- [app.js](file:///c:/Users/david/OneDrive/Coding/Projects/Lumina/app.js)
+**Next Objectives:**
+- Verify load transition timing and fade animations behavior across varying device network speeds.
+
+## [2026-06-22T22:16:00+01:00]
+**Status:** Adjusted vertical positioning of settings button (`more_vert`) from `top: 2rem` to `top: 1.5rem` on desktop, and `top: 1rem` to `top: 0.8rem` on mobile, bringing the icon into visual alignment with the Lumina logo.
+**Files Changed:**
+- [style.css](file:///c:/Users/david/OneDrive/Coding/Projects/Lumina/style.css)
+**Next Objectives:**
+- Verify vertical alignment visual response on both desktop layout and mobile device sizes.
+
 ## [2026-06-22T22:02:00+01:00]
 **Status:** Recalibrated phone pitch sensor calculation for AR Camera mode to resolve the floor-pointing camera bug. Updated sensor elevation to map `beta - 90` when camera stream is running, allowing the phone to be tilted forward to face the sky while keeping standard `beta` mapping when camera is disabled.
 **Files Changed:**
